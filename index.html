@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wedding Invitation | Khulpu Merung & Keishang Diana</title>
+  <meta name="description" content="Wedding celebration invitation of Khulpu Merung and Keishang Diana on December 14, 2026.">
+  
+  <!-- Google Fonts for Regal Wedding Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="preload" as="image" href="assets/couple_shadow_portrait.jpg?v=6">
+  <link rel="preload" as="image" href="assets/groom_revealed.png?v=6">
+  <link rel="preload" as="image" href="assets/bride_revealed.png?v=6">
+</head>
+<body>
+  <!-- Ambient Audio Floating Toggle (Active / Playing by default) -->
+  <button id="audioToggle" class="floating-audio-btn playing" aria-label="Pause Romantic Background Music" title="Pause Music">
+    <span class="music-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" class="music-icon-svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3" fill="currentColor"></circle>
+        <circle cx="18" cy="16" r="3" fill="currentColor"></circle>
+        <line x1="2" y1="2" x2="22" y2="22" class="music-slash-under"></line>
+        <line x1="2" y1="2" x2="22" y2="22" class="music-slash-line"></line>
+      </svg>
+    </span>
+  </button>
+
+  <!-- Ambient Rose Petal and Gold Sparkles Canvas -->
+  <canvas id="ambientCanvas"></canvas>
+
+  <!-- Main Viewport Container -->
+  <main class="scene-viewport">
+
+    <!-- STAGE 1: ENTRANCE DRAPE OVERLAY -->
+    <section id="curtainOverlay" class="curtain-container" aria-label="Wedding Invitation Entrance">
+      <!-- Architectural Curtain Rod / Valance Header -->
+      <div class="curtain-valance-rod" aria-hidden="true">
+        <div class="curtain-rod-bar"></div>
+        <div class="curtain-rod-shadow"></div>
+      </div>
+
+      <!-- The Drapes Surface (masked by the unified smooth arch clip) -->
+      <div class="curtain-surface" id="curtainSurface">
+        <div class="curtain-drape drape-left" id="drapeLeft">
+          <div class="drape-folds"></div>
+          <div class="drape-sheen"></div>
+          <div class="drape-hem"></div>
+        </div>
+        <div class="curtain-drape drape-right" id="drapeRight">
+          <div class="drape-folds"></div>
+          <div class="drape-sheen"></div>
+          <div class="drape-hem"></div>
+        </div>
+      </div>
+
+      <!-- Hardware-Accelerated SVG Arch Edge Shadow & Golden Silk Piping -->
+      <svg class="curtain-arch-edge" id="archEdgeSvg" viewBox="0 0 1000 2000" preserveAspectRatio="none" aria-hidden="true">
+        <path id="archShadowAmbient" d="" fill="none" stroke="rgba(0, 0, 0, 0.12)" stroke-width="28" stroke-linecap="round" />
+        <path id="archShadowDirect" d="" fill="none" stroke="rgba(0, 0, 0, 0.28)" stroke-width="12" stroke-linecap="round" />
+        <path id="archTrimPath" d="" fill="none" stroke="rgba(212, 175, 55, 0.95)" stroke-width="2.5" stroke-linecap="round" />
+      </svg>
+
+      <!-- Center Minimalist Pull Cord with Spring Suspension -->
+      <div class="curtain-rope-assembly" id="curtainRopeAssembly">
+        <div class="hanger-swing" id="hangerSwing">
+          <div class="rope-anchor"></div>
+          <div class="golden-cord" id="goldenCord"></div>
+          <div class="tassel-medallion" id="tasselMedallion" role="button" tabindex="0" aria-label="Wedding monogram medallion: M &amp; D. Pull down to open invitation">
+            <div class="medallion-monogram">M <span class="amp">&amp;</span> D</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hidden SVG ClipPath Definition (Normalized 0 to 1 for objectBoundingBox) -->
+    <svg width="0" height="0" style="position:absolute; pointer-events:none;" aria-hidden="true">
+      <defs>
+        <clipPath id="curtainArchClip" clipPathUnits="objectBoundingBox">
+          <path id="archClipPath" d="M 0 0 L 1 0 L 1 1 L 0 1 Z" />
+        </clipPath>
+      </defs>
+    </svg>
+
+    <!-- STAGE 2: THE SHADOWS — TWO SHADOWS HOLDING HANDS (INDIVIDUAL REVEAL, CARDLESS & WORDLESS) -->
+    <section id="scratchStage" class="stage-section shadows-stage stage-active" aria-label="Two shadows holding hands">
+      <div class="shadows-stage-inner">
+        <div class="shadows-interactive-frame" id="shadowsFrame">
+          
+          <!-- Friendly Advice Banner Instructing Users to Tap Shadows -->
+          <div class="shadows-tap-advice" id="shadowsTapAdvice" aria-live="polite">
+            <span class="advice-sparkle" aria-hidden="true">✨</span>
+            <span class="advice-text">Tap the shadows to reveal the groom &amp; bride</span>
+            <span class="advice-sparkle" aria-hidden="true">✨</span>
+          </div>
+
+          <!-- Revealed Names Banner (Displays Character Names Upon Reveal & 'Groom weds Bride' When Both Revealed) -->
+          <div class="revealed-names-banner" id="revealedNamesBanner" aria-live="polite">
+            <span class="revealed-name-item revealed-name-groom" id="revealedNameGroom">Khulpu Merung</span>
+            <span class="revealed-name-item revealed-name-weds" id="revealedNameWeds">weds</span>
+            <span class="revealed-name-item revealed-name-bride" id="revealedNameBride">Keishang Diana</span>
+          </div>
+
+          <!-- Base Layer: Two Shadows Facing Each Other Holding Hands -->
+          <img src="assets/couple_shadow_portrait.jpg?v=6" alt="Two shadows holding each other's hand" class="shadows-img-layer base-shadow-img" id="baseShadowImg">
+
+          <!-- Subtle Interval Character Highlights (Gently pulses to signal interactivity, removed once disclosed) -->
+          <div class="shadow-figure-glow groom-glow" id="groomHighlight" aria-hidden="true"></div>
+          <div class="shadow-figure-glow bride-glow" id="brideHighlight" aria-hidden="true"></div>
+
+          <!-- Groom Revealed Layer (Left Character Cutout - Background untouched) -->
+          <div class="revealed-half groom-revealed-layer" id="groomRevealedHalf">
+            <img src="assets/groom_revealed.png?v=6" alt="Revealed Groom" class="revealed-full-img">
+          </div>
+
+          <!-- Bride Revealed Layer (Right Character Cutout - Background untouched) -->
+          <div class="revealed-half bride-revealed-layer" id="brideRevealedHalf">
+            <img src="assets/bride_revealed.png?v=6" alt="Revealed Bride" class="revealed-full-img">
+          </div>
+
+          <!-- Invisible Interactive Touch Zones -->
+          <button type="button" class="shadow-touch-zone touch-groom" id="groomCardBox" aria-label="Tap groom shadow to reveal" tabindex="0"></button>
+          <button type="button" class="shadow-touch-zone touch-bride" id="brideCardBox" aria-label="Tap bride shadow to reveal" tabindex="0"></button>
+
+          <!-- Small Next Arrow Button on Bottom Right Corner -->
+          <button id="btnNextStage" class="btn-next-arrow" type="button" aria-label="Continue to Wedding Timeline" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="arrow-svg" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 3: CEREMONIAL TIMELINE & IMPORTANT DATES -->
+    <section id="timelineStage" class="stage-section timeline-stage" aria-label="Wedding Ceremonial Dates and Timing" style="display: none;">
+      <div class="timeline-stage-inner">
+        <!-- Regal Monogram Crest -->
+        <div class="monogram-crest" aria-hidden="true">
+          <div class="crest-text">M &amp; D</div>
+          <div class="crest-dots">
+            <span class="crest-dot"></span>
+            <span class="crest-dot center"></span>
+            <span class="crest-dot"></span>
+          </div>
+        </div>
+
+        <header class="timeline-header">
+          <div class="timeline-couple-banner" id="timelineCoupleBanner">
+            <span class="stage-subheading">TOGETHER WITH THEIR FAMILIES</span>
+            <h2 class="banner-title">
+              <span>Khulpu Merung</span>
+              <span class="amp">&amp;</span>
+              <span>Keishang Diana</span>
+            </h2>
+            <p class="banner-verse">&ldquo;This is the day the Lord has made; let us rejoice and be glad in it.&rdquo; <span class="verse-ref">&mdash; Psalm 118:24</span></p>
+          </div>
+          
+          <div class="minimal-divider" aria-hidden="true">
+            <span class="divider-gem">&#9670;</span>
+          </div>
+
+          <h3 class="timeline-section-heading">Ceremony Schedule &amp; Details</h3>
+          <p class="timeline-subheading">Join us to witness and celebrate this joyous covenant</p>
+        </header>
+
+        <div class="timeline-items-list" id="timelineList">
+          <!-- Continuous Golden Thread Line -->
+          <div class="timeline-thread-line" aria-hidden="true"></div>
+
+          <!-- Item 1: Date -->
+          <div class="timeline-item" id="tlItemDate" data-index="0">
+            <div class="timeline-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="timeline-item-body">
+              <span class="timeline-item-tag">Wedding Date</span>
+              <h4 class="timeline-item-val">Monday, 14th December 2026</h4>
+              <p class="timeline-item-sub">The blessed day to witness their holy covenant in love and faith</p>
+            </div>
+            <div class="timeline-item-glow" aria-hidden="true"></div>
+          </div>
+
+          <!-- Item 2: Time -->
+          <div class="timeline-item" id="tlItemTime" data-index="1">
+            <div class="timeline-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="timeline-item-body">
+              <span class="timeline-item-tag">Ceremony Timing</span>
+              <h4 class="timeline-item-val">11 : 00 AM Morning</h4>
+              <p class="timeline-item-sub">Solemn ceremony commences promptly at 11:00 AM</p>
+            </div>
+            <div class="timeline-item-glow" aria-hidden="true"></div>
+          </div>
+
+          <!-- Item 3: Venue -->
+          <div class="timeline-item" id="tlItemVenue" data-index="2">
+            <div class="timeline-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v4M10 4h4M3 21h18M5 21V11l7-5 7 5v10M9 21v-6h6v6"></path>
+              </svg>
+            </div>
+            <div class="timeline-item-body">
+              <span class="timeline-item-tag">Sacred Venue</span>
+              <h4 class="timeline-item-val">Village Ground, Sandang Senba</h4>
+              <p class="timeline-item-sub">Sandang Senba Maring Village, Manipur</p>
+            </div>
+            <div class="timeline-item-glow" aria-hidden="true"></div>
+          </div>
+
+          <!-- Item 4: Minister -->
+          <div class="timeline-item" id="tlItemMinister" data-index="3">
+            <div class="timeline-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="3" x2="12" y2="21"></line>
+                <line x1="6" y1="8" x2="18" y2="8"></line>
+              </svg>
+            </div>
+            <div class="timeline-item-body">
+              <span class="timeline-item-tag">Officiating Minister</span>
+              <h4 class="timeline-item-val">Rev. Dr. Kh Benjamin</h4>
+              <p class="timeline-item-sub">Pastor, Phunal Samphum Baptist Church</p>
+            </div>
+            <div class="timeline-item-glow" aria-hidden="true"></div>
+          </div>
+
+          <!-- Item 5: Live Countdown -->
+          <div class="timeline-item countdown-item" id="tlItemCountdown" data-index="4">
+            <div class="countdown-card-inner">
+              <span class="timeline-item-tag">COUNTDOWN TO CELEBRATION</span>
+              <div class="timeline-timer-grid">
+                <div class="tl-timer-block">
+                  <span class="tl-time-num" id="tlDays">00</span>
+                  <span class="tl-time-lbl">DAYS</span>
+                </div>
+                <span class="tl-colon" aria-hidden="true">:</span>
+                <div class="tl-timer-block">
+                  <span class="tl-time-num" id="tlHours">00</span>
+                  <span class="tl-time-lbl">HOURS</span>
+                </div>
+                <span class="tl-colon" aria-hidden="true">:</span>
+                <div class="tl-timer-block">
+                  <span class="tl-time-num" id="tlMins">00</span>
+                  <span class="tl-time-lbl">MINS</span>
+                </div>
+                <span class="tl-colon" aria-hidden="true">:</span>
+                <div class="tl-timer-block">
+                  <span class="tl-time-num" id="tlSecs">00</span>
+                  <span class="tl-time-lbl">SECS</span>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item-glow" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="timeline-action-area" id="timelineActionArea">
+          <button id="btnProceedToCard" class="btn-minimalist-action btn-proceed-card" type="button" aria-label="Open the wedding invitation card">
+            <span>Wedding Invitation Card</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="cta-arrow-svg" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 4: ENVELOPE AND INTERACTIVE WEDDING CARD -->
+    <section id="invitationStage" class="stage-section invitation-stage" aria-label="Wedding Invitation Envelope and Card" style="display: none;">
+
+      <!-- Envelope Assembly -->
+      <div class="envelope-wrapper" id="envelopeWrapper">
+        <div class="envelope-perspective">
+          <div class="envelope" id="envelope">
+            <!-- Envelope Back Interior -->
+            <div class="env-back"></div>
+            <div class="env-liner"></div>
+
+            <!-- Pocket clipping container to prevent card poking out of the envelope bottom without truncating soft envelope box-shadow -->
+            <div class="env-card-pocket" id="envCardPocket">
+              <!-- THE WEDDING CARD (Actual Image: ecard.jpeg) -->
+              <article class="wedding-card" id="weddingCard" tabindex="0" aria-label="Official Wedding Invitation Card of Khulpu Merung and Keishang Diana">
+                <div class="card-inner card-image-container">
+                  <!-- Dynamic Foil Shimmer Specular Light -->
+                  <div class="card-shimmer" id="cardShimmer"></div>
+                  <!-- The Actual Official Wedding Invitation Card Image -->
+                  <img src="assets/ecard.jpeg" alt="Official Wedding Invitation Card of Khulpu Merung and Keishang Diana" class="actual-card-img" id="actualCardImg">
+                </div>
+
+                <!-- Interactive prompt when card partially pops out -->
+                <div class="card-peek-badge" id="cardPeekBadge" aria-hidden="true">
+                  <span class="peek-sparkle">✨</span>
+                  <span class="peek-text">Tap Card to View Invitation</span>
+                  <span class="peek-sparkle">✨</span>
+                </div>
+              </article>
+            </div>
+
+            <!-- Envelope Lower Pockets -->
+            <div class="env-pocket-left"></div>
+            <div class="env-pocket-right"></div>
+            <div class="env-pocket-bottom"></div>
+
+            <!-- Envelope Top Flap (Folds smoothly in 3D) -->
+            <div class="env-flap" id="envFlap"></div>
+
+            <!-- Wax Seal With Monogram -->
+            <div class="wax-seal" id="waxSeal" role="button" tabindex="0" aria-label="Tap seal to open invitation">
+              <div class="seal-inner">
+                <span class="seal-monogram">M &amp; D</span>
+                <span class="seal-date">14 &bull; 12 &bull; 26</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

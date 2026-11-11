@@ -1,0 +1,2255 @@
+/* ==========================================================================
+   WEDDING E-CARD: KHULPU MERUNG & KEISHANG DIANA
+   High-performance, 60-120fps GPU accelerated animations & luxury styling
+   ========================================================================== */
+
+:root {
+  /* Minimalist Warm Neutral Palette */
+  --bg-primary: #fbf9f5;
+  --bg-secondary: #f4efe6;
+  --bg-card: #ffffff;
+  --card-border: #e7e2d8;
+  --card-border-subtle: #f0ece3;
+  
+  --text-primary: #1e1b18;
+  --text-secondary: #57534e;
+  --text-muted: #8c857b;
+  
+  --accent-taupe: #8c7851;
+  --accent-warm: #a68c68;
+  --accent-light: #f6f2ea;
+  --accent-dark: #635235;
+
+  /* Drape tones: elegant soft warm taupe silk */
+  --drape-color: #ebe5dc;
+  --drape-dark: #d8d0c3;
+  --drape-shadow: rgba(0, 0, 0, 0.08);
+
+  /* Fonts */
+  --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-script: 'Alex Brush', cursive;
+  --font-title: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-body: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-regal: 'Montserrat', system-ui, -apple-system, sans-serif;
+
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-curtain: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--bg-primary);
+  background: linear-gradient(180deg, #faf8f5 0%, #f4f0e8 100%);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  position: relative;
+  touch-action: manipulation;
+}
+
+/* ==========================================================================
+   AMBIENT BACKGROUND CANVAS & FLOATING AUDIO TOGGLE
+   ========================================================================== */
+
+#ambientCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 90;
+}
+
+.floating-audio-btn {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  right: max(16px, env(safe-area-inset-right, 16px));
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  border: 1px solid rgba(140, 120, 81, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.floating-audio-btn:hover {
+  transform: scale(1.08);
+  background: #ffffff;
+  border-color: var(--accent-taupe);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.floating-audio-btn:active {
+  transform: scale(0.95);
+}
+
+.music-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.3s ease;
+  color: var(--text-primary);
+}
+
+.music-icon-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* Diagonal cut-off slash line across music icon when off */
+.music-slash-under {
+  stroke: #ffffff;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  transition: opacity 0.25s ease, stroke-dashoffset 0.3s ease;
+  stroke-dasharray: 32;
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+
+.music-slash-line {
+  stroke: #c23b3b;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  transition: opacity 0.25s ease, stroke-dashoffset 0.3s ease;
+  stroke-dasharray: 32;
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+
+/* When playing: remove diagonal slash and animate music icon */
+.floating-audio-btn.playing .music-slash-under,
+.floating-audio-btn.playing .music-slash-line {
+  opacity: 0;
+  stroke-dashoffset: 32;
+}
+
+.floating-audio-btn.playing .music-icon-svg {
+  animation: musicIconPulse 2s infinite ease-in-out;
+}
+
+@keyframes musicIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.14) rotate(6deg); }
+}
+
+/* ==========================================================================
+   SCENE VIEWPORT
+   ========================================================================== */
+
+.scene-viewport {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 16px 80px;
+  padding-top: max(40px, env(safe-area-inset-top, 40px));
+  padding-bottom: max(80px, env(safe-area-inset-bottom, 80px));
+}
+
+/* ==========================================================================
+   STAGE 1: REAL-WORLD SILK DRAPE ENTRANCE (SMOOTH ARCH CURVE REVEAL)
+   ========================================================================== */
+
+.curtain-container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  z-index: 50;
+  overflow: hidden;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.curtain-container.curtain-opened {
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  display: none !important;
+}
+
+/* Architectural Curtain Rod / Valance Header */
+.curtain-valance-rod {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  z-index: 65;
+  pointer-events: none;
+  transition: opacity 0.8s ease 1.7s, transform 0.8s var(--ease-curtain) 1.7s;
+}
+
+.curtain-rod-bar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    #7d663c 0%,
+    #d4af37 25%,
+    #f8f2d5 48%,
+    #c49d36 72%,
+    #5a4622 100%
+  );
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  border-bottom: 1px solid rgba(255, 240, 180, 0.45);
+}
+
+.curtain-rod-shadow {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.12) 60%, transparent 100%);
+  pointer-events: none;
+}
+
+.curtain-container.drawing .curtain-valance-rod,
+.curtain-container.curtain-opened .curtain-valance-rod {
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+/* Curtain Surface clipped by the continuous Roman arch */
+.curtain-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  clip-path: url(#curtainArchClip);
+  -webkit-clip-path: url(#curtainArchClip);
+  will-change: clip-path;
+}
+
+/* 3D Fluted Silk Drapery Panels */
+.curtain-drape {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      rgba(25, 18, 12, 0.38) 0px,
+      rgba(45, 33, 22, 0.16) 15px,
+      rgba(255, 250, 240, 0.40) 34px,
+      rgba(255, 255, 255, 0.72) 46px,
+      rgba(255, 245, 230, 0.32) 58px,
+      rgba(38, 28, 18, 0.20) 76px,
+      rgba(25, 18, 12, 0.38) 92px
+    ),
+    linear-gradient(
+      180deg,
+      #d0c7b7 0%,
+      #e8e1d5 18%,
+      #f7f2eb 45%,
+      #e6dfd2 75%,
+      #c6bca9 100%
+    );
+  background-size: 92px 100%, 100% 100%;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.2);
+  z-index: 55;
+  will-change: background-position, transform;
+}
+
+.curtain-drape.drape-left {
+  left: 0;
+  border-right: 1.5px solid rgba(140, 120, 81, 0.4);
+  transform-origin: left center;
+}
+
+.curtain-drape.drape-right {
+  right: 0;
+  border-left: 1.5px solid rgba(140, 120, 81, 0.4);
+  transform-origin: right center;
+}
+
+.curtain-container.curtain-opened .curtain-drape.drape-left {
+  transform: translate3d(-100%, 0, 0) scaleX(0.5);
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+}
+
+.curtain-container.curtain-opened .curtain-drape.drape-right {
+  transform: translate3d(100%, 0, 0) scaleX(0.5);
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+}
+
+/* Subtle fabric fold depth and sheen */
+.drape-folds {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(255, 255, 255, 0.12) 35%,
+    rgba(0, 0, 0, 0.04) 70%,
+    rgba(0, 0, 0, 0.14) 100%
+  );
+  pointer-events: none;
+}
+
+.drape-sheen {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 35%,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 85%
+  );
+  pointer-events: none;
+}
+
+/* Bottom Hem Weighted Fold */
+.drape-hem {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(0, 0, 0, 0.22) 100%
+  );
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+
+/* Hardware-Accelerated SVG Arch Edge Shadow & Golden Silk Piping */
+.curtain-arch-edge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 58;
+}
+
+/* Center Pull Ribbon & Medallion */
+.curtain-rope-assembly {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 70;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.6s var(--ease-smooth), opacity 0.6s ease;
+}
+
+.curtain-rope-assembly:active {
+  cursor: grabbing;
+}
+
+.curtain-container.drawing .curtain-rope-assembly,
+.curtain-container.curtain-opened .curtain-rope-assembly {
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.85);
+  pointer-events: none;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease;
+}
+
+.hanger-swing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: top center;
+  animation: swing 3.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.rope-anchor {
+  width: 14px;
+  height: 14px;
+  background: #a68c68;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.golden-cord {
+  width: 3px;
+  height: clamp(170px, 25vh, 220px);
+  background: #a68c68;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  flex-shrink: 0;
+  transform-origin: top center;
+  will-change: transform;
+}
+
+.tassel-medallion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid var(--accent-taupe);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08), 0 0 15px rgba(140, 120, 81, 0.12);
+  margin-top: -2px;
+  cursor: grab;
+  touch-action: none;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  text-align: center;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  will-change: transform, box-shadow;
+}
+
+.tassel-medallion:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 20px rgba(140, 120, 81, 0.2);
+}
+
+.tassel-medallion:active,
+.curtain-rope-assembly.dragging .tassel-medallion {
+  cursor: grabbing;
+}
+
+.tassel-medallion.tension-ready {
+  border-color: #d4af37 !important;
+  box-shadow: 0 8px 28px rgba(212, 175, 55, 0.45), 0 0 25px rgba(212, 175, 55, 0.6) !important;
+}
+
+.medallion-monogram {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medallion-monogram .amp {
+  font-family: 'Alex Brush', cursive;
+  font-size: 1.45rem;
+  font-style: normal;
+  color: #a68c68;
+  margin: 0 3px;
+}
+
+@keyframes swing {
+  0% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+  100% { transform: rotate(-4deg); }
+}
+
+/* ==========================================================================
+   INTERACTIVE STAGE ARCHITECTURE (COUPLE -> TIMELINE -> REAL INVITATION)
+   ========================================================================== */
+
+.stage-section {
+  width: 100%;
+  position: relative;
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.stage-section.stage-active {
+  display: flex !important;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stage-section.stage-exit {
+  opacity: 0;
+  transform: translateY(-24px) scale(0.97);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   STAGE 2: FULL-VIEW SHADOWS — TWO SHADOWS HOLDING HANDS (FULL BACKGROUND)
+   ========================================================================== */
+
+.shadows-stage {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #090807;
+  overflow: hidden;
+  box-sizing: border-box;
+  opacity: 1; /* Fully rendered beneath the curtain overlay during peek & stage 2 */
+  pointer-events: none;  /* Non-interactive until curtain is opened */
+  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.shadows-stage.stage-active {
+  display: flex;
+  opacity: 1;
+}
+
+.shadows-stage.curtain-unveiled {
+  pointer-events: auto;
+}
+
+/* While curtain is closed or being peeked, show purely the actual couple background portrait without overlay UI */
+.shadows-stage:not(.curtain-unveiled) .shadows-tap-advice,
+.shadows-stage:not(.curtain-unveiled) .revealed-names-banner,
+.shadows-stage:not(.curtain-unveiled) .shadow-figure-glow {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: none !important;
+}
+
+.shadows-stage.stage-exit {
+  opacity: 0 !important;
+  transform: scale(1.03);
+  pointer-events: none !important;
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Completely hide stage 2 when exiting or navigating to subsequent stages */
+.shadows-stage.stage-hidden,
+body.timeline-active .shadows-stage,
+body.invitation-active .shadows-stage,
+body:has(#timelineStage.stage-active) .shadows-stage,
+body:has(#invitationStage.stage-active) .shadows-stage {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.shadows-stage-inner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Seamless Interactive Shadow Frame: Full mobile view, edge-to-edge, full background */
+.shadows-interactive-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  background: #090807;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+@media (min-width: 601px) {
+  .shadows-stage-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .shadows-interactive-frame {
+    position: relative !important;
+    width: auto !important;
+    height: 94vh !important;
+    max-height: 920px !important;
+    aspect-ratio: 768 / 1376 !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(212, 175, 55, 0.2) !important;
+    overflow: hidden;
+  }
+}
+
+/* Base Shadow Layer: Both figures holding hands in silhouette */
+.shadows-img-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  pointer-events: none;
+}
+
+.base-shadow-img {
+  z-index: 1;
+}
+
+/* Friendly Advice Pill above shadow figures */
+.shadows-tap-advice {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  background: rgba(14, 10, 6, 0.65);
+  border: 1px solid rgba(212, 175, 55, 0.38);
+  border-radius: 30px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 16px rgba(212, 175, 55, 0.18);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: adviceBreathe 3s ease-in-out infinite;
+  transition: opacity 0.6s ease, transform 0.6s var(--ease-smooth);
+}
+
+.shadows-tap-advice.dismissed {
+  opacity: 0 !important;
+  transform: translate(-50%, -10px) !important;
+  pointer-events: none !important;
+}
+
+.advice-text {
+  font-family: var(--font-serif);
+  font-size: clamp(0.92rem, 3.4vw, 1.08rem);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.8px;
+  color: #f7eedb;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 12px rgba(212, 175, 55, 0.4);
+}
+
+.advice-sparkle {
+  font-size: 0.85rem;
+  color: #ffd700;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+@keyframes adviceBreathe {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(212, 175, 55, 0.15);
+    border-color: rgba(212, 175, 55, 0.35);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.7), 0 0 22px rgba(212, 175, 55, 0.35);
+    border-color: rgba(212, 175, 55, 0.65);
+  }
+}
+
+/* Revealed Names Banner: Seamlessly integrated into romantic night ambience (No background, No border) */
+.revealed-names-banner {
+  position: absolute;
+  top: 11%;
+  left: 50%;
+  transform: translate(-50%, -6px);
+  z-index: 15;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, transform 0.6s var(--ease-smooth);
+}
+
+.revealed-names-banner.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.revealed-names-banner .revealed-name-item {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: max-width 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.45s ease,
+              transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.5s ease;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.revealed-name-groom,
+.revealed-name-bride {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 3.8vw, 1.34rem);
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #fff6da;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.95),
+    0 0 10px rgba(255, 215, 0, 0.75),
+    0 0 22px rgba(230, 160, 30, 0.55),
+    0 0 35px rgba(212, 175, 55, 0.35);
+}
+
+.revealed-name-weds {
+  font-family: var(--font-script);
+  font-size: clamp(1.45rem, 5.2vw, 1.82rem);
+  font-weight: 400;
+  color: #ffd700;
+  line-height: 1;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.95),
+    0 0 12px rgba(255, 215, 0, 0.9),
+    0 0 25px rgba(255, 170, 0, 0.7);
+}
+
+/* State: Only Groom revealed */
+.revealed-names-banner.state-groom .revealed-name-groom {
+  max-width: 280px;
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* State: Only Bride revealed */
+.revealed-names-banner.state-bride .revealed-name-bride {
+  max-width: 280px;
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* State: Both revealed -> Groom weds Bride with celebratory ambient glow matching the starlight */
+.revealed-names-banner.state-both .revealed-name-groom {
+  max-width: 280px;
+  opacity: 1;
+  transform: scale(1);
+  animation: namesGlowCelebrate 3.5s ease-in-out infinite alternate;
+}
+
+.revealed-names-banner.state-both .revealed-name-weds {
+  max-width: 100px;
+  opacity: 1;
+  transform: scale(1);
+  margin: 0 10px;
+  animation: namesGlowCelebrate 3.5s ease-in-out infinite alternate;
+}
+
+.revealed-names-banner.state-both .revealed-name-bride {
+  max-width: 280px;
+  opacity: 1;
+  transform: scale(1);
+  animation: namesGlowCelebrate 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes namesGlowCelebrate {
+  0% {
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.95),
+      0 0 10px rgba(255, 215, 0, 0.75),
+      0 0 20px rgba(230, 160, 30, 0.5),
+      0 0 32px rgba(212, 175, 55, 0.3);
+  }
+  100% {
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.95),
+      0 0 14px rgba(255, 225, 100, 0.95),
+      0 0 28px rgba(255, 190, 40, 0.75),
+      0 0 44px rgba(255, 215, 0, 0.55);
+  }
+}
+
+/* Subtle Interval Character Glow (Delicate warm golden aura, removed once disclosed) */
+.shadow-figure-glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  animation: subtleFigureGlow 3.6s infinite ease-in-out;
+  transition: opacity 0.4s ease;
+  mix-blend-mode: screen;
+}
+
+.shadow-figure-glow.groom-glow {
+  left: 0;
+  background: radial-gradient(ellipse 65% 55% at 56% 52%, rgba(220, 180, 75, 0.28) 0%, rgba(220, 180, 75, 0.12) 40%, rgba(212, 175, 55, 0.03) 65%, transparent 75%);
+  animation-delay: 0.3s;
+}
+
+.shadow-figure-glow.bride-glow {
+  right: 0;
+  background: radial-gradient(ellipse 65% 55% at 44% 52%, rgba(220, 180, 75, 0.28) 0%, rgba(220, 180, 75, 0.12) 40%, rgba(212, 175, 55, 0.03) 65%, transparent 75%);
+  animation-delay: 1.8s;
+}
+
+@keyframes subtleFigureGlow {
+  0%, 60%, 100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  80% {
+    opacity: 0.85;
+    transform: scale(1.01);
+  }
+}
+
+.shadow-figure-glow.highlight-removed {
+  opacity: 0 !important;
+  animation: none !important;
+  display: none !important;
+}
+
+/* Revealed Layers: Transparent Character Cutouts (0% Background Change) */
+.revealed-half {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: opacity;
+}
+
+.revealed-half .revealed-full-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+/* When Groom is revealed: Only the groom cutout appears over his shadow */
+.shadows-interactive-frame.groom-revealed .groom-revealed-layer {
+  opacity: 1;
+}
+
+/* When Bride is revealed: Only the bride cutout appears over her shadow */
+.shadows-interactive-frame.bride-revealed .bride-revealed-layer {
+  opacity: 1;
+}
+
+/* When both are revealed */
+.shadows-interactive-frame.both-revealed .groom-revealed-layer,
+.shadows-interactive-frame.both-revealed .bride-revealed-layer {
+  opacity: 1;
+}
+
+/* Next Step Arrow Button on Bottom Right Corner - Cardless & Transparent with Lil Animation */
+.btn-next-arrow {
+  position: absolute;
+  bottom: max(22px, env(safe-area-inset-bottom, 22px));
+  right: max(18px, env(safe-area-inset-right, 18px));
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 60;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-next-arrow.visible {
+  opacity: 1;
+  pointer-events: auto;
+  animation: rightArrowFloat 1.8s infinite ease-in-out;
+}
+
+@keyframes rightArrowFloat {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(8px);
+  }
+}
+
+.btn-next-arrow:hover {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: translateX(4px) scale(1.12);
+}
+
+.btn-next-arrow:active {
+  transform: scale(0.92);
+}
+
+.btn-next-arrow .arrow-svg {
+  width: 28px;
+  height: 28px;
+  stroke: #ffffff;
+  stroke-width: 2.6;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 10px rgba(212, 175, 55, 0.75));
+  transition: stroke 0.25s ease, filter 0.25s ease;
+}
+
+.btn-next-arrow:hover .arrow-svg {
+  stroke: #fff4d0;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 16px rgba(255, 225, 120, 0.95));
+}
+
+/* Invisible Interactive Touch Zones (Left 50% for Groom, Right 50% for Bride) */
+.shadow-touch-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 10;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shadow-touch-zone.touch-groom {
+  left: 0;
+}
+
+.shadow-touch-zone.touch-bride {
+  right: 0;
+}
+
+.shadow-touch-zone:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, 0.7);
+  outline-offset: -4px;
+  border-radius: 12px;
+}
+
+.stage-subheading {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--accent-taupe);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.btn-minimalist-action {
+  font-family: var(--font-sans);
+  font-size: clamp(0.82rem, 2.4vw, 0.9rem);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  border-radius: 30px;
+  padding: 11px 26px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-minimalist-action:hover {
+  background: #383430;
+  border-color: #383430;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.btn-minimalist-action:active {
+  transform: translateY(0) scale(0.98);
+}
+
+
+/* ==========================================================================
+   STAGE 3 & 4: TIMELINE & INVITATION (SINGLE FRAME FIT & NO SCROLLBAR)
+   ========================================================================== */
+
+body:has(#timelineStage.stage-active),
+body:has(#timelineStage[style*="display: flex"]),
+body.timeline-active,
+body:has(#invitationStage.stage-active),
+body:has(#invitationStage[style*="display: flex"]),
+body.invitation-active {
+  overflow: hidden !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+}
+
+body:has(#timelineStage.stage-active) .scene-viewport,
+body:has(#timelineStage[style*="display: flex"]) .scene-viewport,
+body.timeline-active .scene-viewport {
+  padding: 8px 10px 10px !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.timeline-stage {
+  max-width: 430px;
+  width: 100%;
+  height: 100%;
+  max-height: calc(100dvh - 16px);
+  margin: 0 auto;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 10px 8px;
+  box-sizing: border-box;
+  overflow: hidden !important;
+}
+
+.timeline-stage-inner {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  background: transparent;
+  border-radius: 0;
+  position: relative;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+
+/* Monogram Crest */
+.monogram-crest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: clamp(14px, 2.2vh, 22px);
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.crest-text {
+  font-family: var(--font-script);
+  font-size: 1.7rem;
+  color: #b89047;
+  line-height: 1;
+  letter-spacing: 2px;
+  text-shadow: 0 1px 2px rgba(184, 144, 71, 0.2);
+}
+
+.crest-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.crest-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #c5a059;
+  opacity: 0.8;
+}
+
+.crest-dot.center {
+  width: 4px;
+  height: 4px;
+  background: #b89047;
+}
+
+/* Header Area */
+.timeline-header {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 4px;
+}
+
+.timeline-couple-banner {
+  padding-bottom: 2px;
+}
+
+.stage-subheading {
+  font-family: var(--font-sans);
+  font-size: 0.54rem;
+  font-weight: 600;
+  letter-spacing: 2.8px;
+  color: #8c7d6e;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.banner-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-weight: 600;
+  color: #1a1816;
+  line-height: 1.2;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 5px;
+}
+
+.banner-title .amp {
+  font-family: var(--font-script);
+  font-size: 1.45rem;
+  color: #c5a059;
+  font-weight: 400;
+  padding: 0 2px;
+}
+
+.banner-verse {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(0.74rem, 2.2vw, 0.82rem);
+  color: #686058;
+  margin: 3px auto 0;
+  max-width: 320px;
+  line-height: 1.25;
+}
+
+.banner-verse .verse-ref {
+  font-size: 0.68rem;
+  font-style: normal;
+  color: #9c8e7e;
+  white-space: nowrap;
+}
+
+/* Minimalist Gold Divider with diamond accent */
+.minimal-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 6px auto;
+  width: 60%;
+  height: auto;
+  background: transparent;
+}
+
+.minimal-divider::before,
+.minimal-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197, 160, 89, 0.45), transparent);
+}
+
+.divider-gem {
+  color: #c5a059;
+  font-size: 0.55rem;
+  transform: rotate(45deg);
+  display: inline-block;
+}
+
+.timeline-section-heading {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+  color: #a08247;
+  text-transform: uppercase;
+  margin: 0 0 1px;
+  display: block;
+}
+
+.timeline-subheading {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  color: #8c8276;
+  margin: 0;
+}
+
+/* Connected Golden Timeline List */
+.timeline-items-list {
+  position: relative;
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0;
+  z-index: 2;
+}
+
+.timeline-thread-line {
+  position: absolute;
+  top: 10px;
+  bottom: 14px;
+  left: 11px;
+  width: 1.5px;
+  background: linear-gradient(180deg, #c5a059 0%, #d8c38e 70%, rgba(212, 175, 55, 0.1) 100%);
+  pointer-events: none;
+}
+
+.timeline-item {
+  position: relative;
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: opacity, transform;
+  transition: opacity 0.5s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+  display: block;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.timeline-item.revealed {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.timeline-item-icon {
+  position: absolute;
+  left: -28px;
+  top: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(253, 252, 249, 0.95);
+  border: 1.2px solid #c5a059;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(197, 160, 89, 0.15);
+  z-index: 3;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.timeline-item-icon svg {
+  width: 12px;
+  height: 12px;
+  stroke: #b89047;
+  stroke-width: 1.8;
+}
+
+.timeline-item-body {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0 0 2px 4px;
+  box-shadow: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.timeline-item:hover .timeline-item-body {
+  border: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.timeline-item:hover .timeline-item-icon {
+  background: #fffdf8;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+  transform: scale(1.05);
+}
+
+.timeline-item-tag {
+  font-family: var(--font-sans);
+  font-size: 0.50rem;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  color: #9d8353;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 1px;
+}
+
+.timeline-item-val {
+  font-family: var(--font-serif);
+  font-size: clamp(0.92rem, 2.8vw, 1.05rem);
+  font-weight: 600;
+  color: #1a1816;
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.timeline-item-sub {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  color: #787066;
+  margin-top: 1px;
+  line-height: 1.25;
+}
+
+/* Sweeping light shimmer on timeline items */
+.timeline-item-glow {
+  display: none !important;
+}
+
+/* Item 5: Live Countdown to Celebration */
+.timeline-item.countdown-item {
+  padding-left: 0;
+  margin-top: 2px;
+}
+
+.countdown-card-inner {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0 0;
+  text-align: center;
+  box-shadow: none;
+  position: relative;
+  overflow: visible;
+  transition: all 0.3s ease;
+}
+
+.countdown-card-inner:hover {
+  border: none;
+  box-shadow: none;
+}
+
+.countdown-card-inner .timeline-item-tag {
+  margin-bottom: 3px;
+}
+
+.timeline-timer-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.tl-timer-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  border-radius: 6px;
+  min-width: 44px;
+  padding: 2px 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.tl-time-num {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1816;
+  line-height: 1;
+}
+
+.tl-time-lbl {
+  font-family: var(--font-sans);
+  font-size: 0.48rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #9d8353;
+  margin-top: 1px;
+}
+
+.tl-colon {
+  font-family: var(--font-serif);
+  font-size: 1.0rem;
+  color: #c5a059;
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+
+/* CTA Button Action Area */
+.timeline-action-area {
+  margin-top: 4px;
+  margin-bottom: clamp(18px, 2.8vh, 26px);
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.timeline-action-area.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn-proceed-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  max-width: 260px;
+  margin: 0 auto;
+  padding: 6px 18px;
+  background: linear-gradient(135deg, #1f1a16 0%, #2a231d 100%);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  border-radius: 25px;
+  color: #f7eedb;
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18), 0 0 10px rgba(212, 175, 55, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-proceed-card:hover {
+  background: linear-gradient(135deg, #2a231d 0%, #3a3026 100%);
+  border-color: rgba(255, 215, 0, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 0 12px rgba(255, 215, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-proceed-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-proceed-card .cta-arrow-svg {
+  width: 12px;
+  height: 12px;
+  stroke: #ffd700;
+  stroke-width: 2;
+  transition: transform 0.3s ease;
+}
+
+.btn-proceed-card:hover .cta-arrow-svg {
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
+   STAGE 4: THE 3D ENVELOPE ASSEMBLY
+   ========================================================================== */
+
+.invitation-stage {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  padding: 16px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.envelope-wrapper {
+  width: 100%;
+  max-width: 440px;
+  min-height: 320px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  perspective: 1400px;
+  margin: auto 0;
+  transition: opacity 0.5s ease;
+}
+
+.envelope-wrapper.card-elevated,
+.envelope-wrapper:has(.wedding-card.elevated) {
+  position: static !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+.envelope-perspective {
+  width: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.envelope-wrapper.card-elevated .envelope-perspective,
+.envelope-wrapper:has(.wedding-card.elevated) .envelope-perspective {
+  position: static !important;
+  transform: none !important;
+  perspective: none !important;
+  transform-style: flat !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.envelope {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  background: linear-gradient(155deg, #f7efe4 0%, #ece2d0 45%, #e0d1b9 100%);
+  border-radius: 14px;
+  box-shadow: 
+    0 30px 65px -15px rgba(50, 38, 25, 0.35),
+    0 12px 28px -8px rgba(50, 38, 25, 0.22),
+    0 0 0 1px rgba(212, 175, 55, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+  transform-style: preserve-3d;
+  transition: transform 1s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.8s ease, height 0.9s cubic-bezier(0.2, 0.9, 0.3, 1);
+  cursor: pointer;
+}
+
+/* Step 1: When lid opens and card peeks out, envelope stays rock-solid centered */
+.envelope.open:not(.card-elevated) {
+  transform: none;
+}
+
+/* Step 2: When card is elevated to full-screen view */
+body:has(.card-elevated),
+body:has(.wedding-card.elevated) {
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+body:has(.card-elevated) .scene-viewport,
+body:has(.wedding-card.elevated) .scene-viewport {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+body:has(.card-elevated) #ambientCanvas,
+body:has(.wedding-card.elevated) #ambientCanvas,
+body:has(.card-elevated) .floating-audio-btn,
+body:has(.wedding-card.elevated) .floating-audio-btn {
+  display: none !important;
+}
+
+.invitation-stage:has(.card-elevated),
+.invitation-stage:has(.wedding-card.elevated),
+.invitation-stage.stage-active:has(.card-elevated),
+.invitation-stage.stage-active:has(.wedding-card.elevated) {
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+.envelope.card-elevated,
+.envelope-wrapper.card-elevated .envelope,
+.envelope-wrapper:has(.wedding-card.elevated) .envelope {
+  position: static !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: unset !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+  transform: none !important;
+  transform-style: flat !important;
+  perspective: none !important;
+  cursor: default !important;
+}
+
+.envelope-wrapper.card-elevated .env-back,
+.envelope-wrapper.card-elevated .env-liner,
+.envelope-wrapper.card-elevated .env-pocket-left,
+.envelope-wrapper.card-elevated .env-pocket-right,
+.envelope-wrapper.card-elevated .env-pocket-bottom,
+.envelope-wrapper.card-elevated .env-flap,
+.envelope-wrapper.card-elevated .wax-seal,
+.envelope-wrapper.card-elevated .card-peek-badge {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Card pocket container to clip card at bottom of envelope without clipping envelope shadow */
+.env-card-pocket {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  clip-path: inset(-800px 0px 8px 0px round 0 0 14px 14px);
+  border-radius: 0 0 14px 14px;
+  z-index: 5;
+}
+
+.env-card-pocket .wedding-card {
+  pointer-events: auto;
+}
+
+.envelope-wrapper.card-elevated .env-card-pocket,
+.envelope.card-elevated .env-card-pocket,
+.envelope-wrapper:has(.wedding-card.elevated) .env-card-pocket {
+  position: static !important;
+  clip-path: none !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Envelope Interior & Liner */
+.env-back {
+  position: absolute;
+  inset: 0;
+  background: #ded2bf;
+  border-radius: 14px;
+  z-index: 1;
+}
+
+.env-liner {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  background: linear-gradient(135deg, #fdf6f2 0%, #fbebe5 50%, #f5e0da 100%);
+  border-radius: 10px;
+  border: 1px dashed rgba(197, 155, 39, 0.4);
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* Floral pattern watermark inside envelope liner */
+.env-liner::after {
+  content: "❦ ❧ ❀ ✿ ❁ ✾";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  letter-spacing: clamp(12px, 3.5vw, 22px);
+  opacity: 0.14;
+  color: #a63d53;
+  transform: rotate(-12deg);
+}
+
+/* Envelope Flaps / Pockets with Rich Realistic Shading */
+.env-pocket-left {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #f2e7d7 0%, #dfcfb6 100%);
+  clip-path: polygon(0 0, 50% 50%, 0 100%);
+  border-radius: 14px 0 0 14px;
+  z-index: 10;
+  pointer-events: none;
+  filter: drop-shadow(4px 0 8px rgba(50, 35, 20, 0.16));
+}
+
+.env-pocket-right {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(-135deg, #f2e7d7 0%, #dfcfb6 100%);
+  clip-path: polygon(100% 0, 50% 50%, 100% 100%);
+  border-radius: 0 14px 14px 0;
+  z-index: 10;
+  pointer-events: none;
+  filter: drop-shadow(-4px 0 8px rgba(50, 35, 20, 0.16));
+}
+
+.env-pocket-bottom {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #ddccb3 0%, #ece0ce 100%);
+  clip-path: polygon(0 100%, 50% 46%, 100% 100%);
+  border-radius: 0 0 14px 14px;
+  z-index: 11;
+  pointer-events: none;
+  filter: drop-shadow(0 -4px 10px rgba(50, 35, 20, 0.18));
+}
+
+/* Envelope Top Flap (Smooth, fluid 3D fold) */
+.env-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(180deg, #eeddc7 0%, #dfcfb6 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 55%);
+  border-radius: 14px 14px 0 0;
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  z-index: 15;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgba(50, 35, 20, 0.22));
+  transition: transform 0.85s cubic-bezier(0.25, 1, 0.35, 1), z-index 0s linear 0.42s;
+  will-change: transform;
+}
+
+.envelope.open .env-flap {
+  transform: rotateX(180deg);
+  z-index: 3;
+}
+
+/* Wax Seal Button (Royal Antique Wax) */
+.wax-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #a4303f 0%, #821b2a 58%, #520d18 100%);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.35),
+    0 3px 8px rgba(130, 27, 42, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.35),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s var(--ease-spring), opacity 0.5s ease;
+  user-select: none;
+}
+
+.wax-seal:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.wax-seal:active {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.seal-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 230, 180, 0.6);
+  color: #fff6e8;
+}
+
+.seal-monogram {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.seal-date {
+  font-family: var(--font-sans);
+  font-size: 0.54rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #ffd8a8;
+  margin-top: 1px;
+}
+
+/* Wax Seal Broken / Hidden State */
+.envelope.open .wax-seal {
+  opacity: 0;
+  transform: translate(-50%, -20%) scale(0.65);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ==========================================================================
+   STAGE 4: THE WEDDING INVITATION CARD (ACTUAL IMAGE ecard.jpeg)
+   ========================================================================== */
+
+.wedding-card {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  height: auto;
+  min-height: unset;
+  aspect-ratio: 880 / 1280;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(197, 155, 39, 0.35);
+  z-index: 5;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.6s ease, opacity 0.5s ease;
+  will-change: transform, opacity;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* While envelope is sealed closed, card remains concealed inside */
+.envelope:not(.open) .wedding-card {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Step 1: Card pops up partially out of the open envelope pocket */
+.wedding-card.peeking {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-90px) scale(0.97);
+  z-index: 6;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(212, 175, 55, 0.45);
+}
+
+.wedding-card.peeking:hover {
+  transform: translateY(-102px) scale(0.985);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35), 0 0 18px rgba(212, 175, 55, 0.5);
+}
+
+/* Step 2: Card elevates into full-screen layout covering 100% of the screen with zero background */
+.wedding-card.elevated {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  width: 100dvw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  aspect-ratio: unset !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 99999 !important;
+  background: #ffffff !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  cursor: default !important;
+  transform: none !important;
+}
+
+/* Interactive Floating Badge on Partially Popped Card */
+.card-peek-badge {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28, 22, 18, 0.92);
+  color: #f7eedb;
+  border: 1px solid rgba(212, 175, 55, 0.7);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 25;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.wedding-card.peeking .card-peek-badge {
+  opacity: 1;
+  animation: peekBounce 1.8s ease-in-out infinite;
+}
+
+.wedding-card.elevated .card-peek-badge {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes peekBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+
+.card-inner.card-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background-color: #ffffff;
+  border-radius: 16px;
+  display: block;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.card-inner.card-image-container::before,
+.card-inner.card-image-container::after {
+  display: none !important;
+}
+
+.actual-card-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+/* Full-bleed inner presentation when elevated */
+.wedding-card.elevated .card-inner,
+.wedding-card.elevated .card-inner.card-image-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform: none !important;
+}
+
+.wedding-card.elevated .actual-card-img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+  display: block !important;
+  background: #ffffff !important;
+}
+
+/* Foil Shimmer Specular Light Sweep */
+.card-shimmer {
+  position: absolute;
+  inset: 0;
+  background: var(--gold-shimmer);
+  transform: translateX(-150%) rotate(25deg);
+  pointer-events: none;
+  opacity: 0.65;
+  mix-blend-mode: overlay;
+  z-index: 10;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (MOBILE, TABLET & RETINA OPTIMIZATIONS)
+   ========================================================================== */
+
+@media (max-width: 600px) {
+  .scene-viewport {
+    padding: 24px 10px max(50px, env(safe-area-inset-bottom, 50px));
+  }
+
+  /* Stage 2: Two Shadows Frame Mobile Optimization - Full Screen Edge-to-Edge */
+  .shadows-stage {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .shadows-interactive-frame {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .btn-next-arrow {
+    width: 40px;
+    height: 40px;
+    bottom: max(18px, env(safe-area-inset-bottom, 18px));
+    right: max(16px, env(safe-area-inset-right, 16px));
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .btn-next-arrow .arrow-svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .floating-audio-btn {
+    top: max(12px, env(safe-area-inset-top, 12px));
+    right: max(12px, env(safe-area-inset-right, 12px));
+    width: 32px;
+    height: 32px;
+    padding: 0;
+  }
+
+  .floating-audio-btn .music-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Curtain & Tassel on Mobile */
+  .golden-cord {
+    height: clamp(130px, 20vh, 170px);
+  }
+
+  .tassel-medallion {
+    width: 78px;
+    height: 78px;
+    padding: 8px;
+  }
+
+  .medallion-monogram {
+    font-size: 1.22rem;
+    letter-spacing: 1.5px;
+  }
+
+  .medallion-monogram .amp {
+    font-size: 1.32rem;
+  }
+
+  /* Envelope & 3D Stages on Mobile */
+  .envelope-wrapper {
+    max-width: calc(100vw - 20px);
+    min-height: 290px;
+    margin: auto 0;
+  }
+
+  .envelope {
+    height: 270px;
+    border-radius: 12px;
+  }
+
+  .envelope.open:not(.card-elevated) {
+    transform: translateY(16px) scale(0.98);
+  }
+
+  .wax-seal {
+    width: 74px;
+    height: 74px;
+  }
+
+  .seal-inner {
+    width: 62px;
+    height: 62px;
+  }
+
+  .seal-monogram {
+    font-size: 1.05rem;
+  }
+
+  .seal-date {
+    font-size: 0.52rem;
+  }
+
+  /* The Wedding Card on Mobile */
+  .wedding-card {
+    min-height: unset;
+    aspect-ratio: 880 / 1280;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .wedding-card.peeking {
+    transform: translateY(-80px) scale(0.97);
+  }
+
+  .card-inner {
+    padding: 24px 14px 20px;
+  }
+
+  .card-inner::before {
+    inset: 8px;
+  }
+
+  .card-inner::after {
+    inset: 12px;
+  }
+
+}
+
+/* Extra Small Phones (iPhone SE, Galaxy A series, etc.) */
+@media (max-width: 380px) {
+  .scene-viewport {
+    padding: 20px 6px max(40px, env(safe-area-inset-bottom, 40px));
+  }
+
+  .golden-cord {
+    height: 130px;
+  }
+
+  .tassel-medallion {
+    width: 72px;
+    height: 72px;
+    padding: 6px;
+  }
+
+  .medallion-monogram {
+    font-size: 1.12rem;
+    letter-spacing: 1.2px;
+  }
+
+  .medallion-monogram .amp {
+    font-size: 1.22rem;
+  }
+
+  .envelope-wrapper {
+    min-height: 280px;
+  }
+
+  .envelope {
+    height: 250px;
+  }
+
+  .envelope.open:not(.card-elevated) {
+    transform: translateY(12px) scale(0.98);
+  }
+
+  .wedding-card {
+    min-height: unset;
+    aspect-ratio: 880 / 1280;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+  }
+
+  .wedding-card.peeking {
+    transform: translateY(-70px) scale(0.97);
+  }
+
+  .card-inner {
+    padding: 20px 10px 16px;
+  }
+
+}
+
+/* ==========================================================================
+   ACCESSIBILITY: PREFERS-REDUCED-MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+
+  #ambientCanvas {
+    display: none;
+  }
+}
