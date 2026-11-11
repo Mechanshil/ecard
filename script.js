@@ -1,5 +1,5 @@
 /**
- * Wedding Invitation E-Card: Khulpu Merung & Keishang Diana
+ * Wedding Invitation E-Card: Khulpu Merung & Keishang Muidou Kansou
  * Smooth, 60-120fps interactions, Web Audio engine, 3D tilt, and Canvas particles
  */
 
@@ -16,9 +16,6 @@
     groomRevealed: false,
     brideRevealed: false,
     bothRevealed: false,
-    groomScratched: false,
-    brideScratched: false,
-    scratchCompleted: false,
     timelineShown: false,
     invitationShown: false,
     envelopeOpened: false,
@@ -862,29 +859,6 @@
     } catch (_) {}
   }
 
-  function playScratchSound() {
-    if (!audioCtx) initAudio();
-    if (!audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(320 + Math.random() * 260, now);
-
-      gain.gain.setValueAtTime(0.015, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.045);
-    } catch (_) {}
-  }
-
   // =========================================================================
   // 3C. STAGE 2: TWO SHADOWS HOLDING HANDS (INDIVIDUAL REVEAL ENGINE)
   // =========================================================================
@@ -938,9 +912,8 @@
   }
 
   function dismissTapAdvice() {
-    const tapAdvice = document.getElementById('shadowsTapAdvice');
-    if (tapAdvice && !tapAdvice.classList.contains('dismissed')) {
-      tapAdvice.classList.add('dismissed');
+    if (shadowsTapAdvice && !shadowsTapAdvice.classList.contains('dismissed')) {
+      shadowsTapAdvice.classList.add('dismissed');
     }
   }
 
@@ -948,7 +921,6 @@
     dismissTapAdvice();
     if (state.groomRevealed) return;
     state.groomRevealed = true;
-    state.groomScratched = true;
 
     // Remove interval border highlight from groom once disclosed
     const groomHl = document.getElementById('groomHighlight');
@@ -980,7 +952,6 @@
     dismissTapAdvice();
     if (state.brideRevealed) return;
     state.brideRevealed = true;
-    state.brideScratched = true;
 
     // Remove interval border highlight from bride once disclosed
     const brideHl = document.getElementById('brideHighlight');
@@ -1011,26 +982,23 @@
   function updateRevealStatus() {
     const both = state.groomRevealed && state.brideRevealed;
     state.bothRevealed = both;
-    state.scratchCompleted = both;
 
-    const tapAdvice = document.getElementById('shadowsTapAdvice');
-    if (tapAdvice && (both || state.groomRevealed || state.brideRevealed)) {
-      tapAdvice.classList.add('dismissed');
+    if (shadowsTapAdvice && (both || state.groomRevealed || state.brideRevealed)) {
+      shadowsTapAdvice.classList.add('dismissed');
     }
 
-    const namesBanner = document.getElementById('revealedNamesBanner');
-    if (namesBanner) {
+    if (revealedNamesBanner) {
       if (both) {
-        namesBanner.classList.remove('state-groom', 'state-bride');
-        namesBanner.classList.add('visible', 'state-both');
+        revealedNamesBanner.classList.remove('state-groom', 'state-bride');
+        revealedNamesBanner.classList.add('visible', 'state-both');
       } else if (state.groomRevealed) {
-        namesBanner.classList.remove('state-bride', 'state-both');
-        namesBanner.classList.add('visible', 'state-groom');
+        revealedNamesBanner.classList.remove('state-bride', 'state-both');
+        revealedNamesBanner.classList.add('visible', 'state-groom');
       } else if (state.brideRevealed) {
-        namesBanner.classList.remove('state-groom', 'state-both');
-        namesBanner.classList.add('visible', 'state-bride');
+        revealedNamesBanner.classList.remove('state-groom', 'state-both');
+        revealedNamesBanner.classList.add('visible', 'state-bride');
       } else {
-        namesBanner.classList.remove('visible', 'state-groom', 'state-bride', 'state-both');
+        revealedNamesBanner.classList.remove('visible', 'state-groom', 'state-bride', 'state-both');
       }
     }
 
@@ -1259,13 +1227,6 @@
   // 5. 3D PARALLAX TILT ENGINE (Card Tilt & Dynamic Lighting)
   // =========================================================================
   let isMouseOverCard = false;
-
-  function getBaseCardTransform() {
-    const w = window.innerWidth;
-    if (w <= 380) return { scale: 1.0, maxRot: 3 };
-    if (w <= 600) return { scale: 1.0, maxRot: 4 };
-    return { scale: 1.0, maxRot: 6 };
-  }
 
   function updateTilt() {
     if (weddingCard.classList.contains('elevated')) {

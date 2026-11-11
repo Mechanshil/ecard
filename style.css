@@ -1,38 +1,21 @@
 /* ==========================================================================
-   WEDDING E-CARD: KHULPU MERUNG & KEISHANG DIANA
+   WEDDING E-CARD: KHULPU MERUNG & KEISHANG MUIDOU KANSOU
    High-performance, 60-120fps GPU accelerated animations & luxury styling
    ========================================================================== */
 
 :root {
   /* Minimalist Warm Neutral Palette */
   --bg-primary: #fbf9f5;
-  --bg-secondary: #f4efe6;
-  --bg-card: #ffffff;
-  --card-border: #e7e2d8;
-  --card-border-subtle: #f0ece3;
-  
   --text-primary: #1e1b18;
-  --text-secondary: #57534e;
-  --text-muted: #8c857b;
-  
   --accent-taupe: #8c7851;
-  --accent-warm: #a68c68;
-  --accent-light: #f6f2ea;
-  --accent-dark: #635235;
-
-  /* Drape tones: elegant soft warm taupe silk */
-  --drape-color: #ebe5dc;
-  --drape-dark: #d8d0c3;
-  --drape-shadow: rgba(0, 0, 0, 0.08);
 
   /* Fonts */
   --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
   --font-script: 'Alex Brush', cursive;
-  --font-title: 'Playfair Display', Georgia, serif;
   --font-sans: 'Montserrat', system-ui, -apple-system, sans-serif;
-  --font-body: 'Montserrat', system-ui, -apple-system, sans-serif;
-  --font-regal: 'Montserrat', system-ui, -apple-system, sans-serif;
 
+  /* Specular Lighting & Animation Curves */
+  --gold-shimmer: linear-gradient(135deg, rgba(255, 255, 255, 0) 20%, rgba(255, 248, 220, 0.45) 45%, rgba(212, 175, 55, 0.65) 50%, rgba(255, 248, 220, 0.45) 55%, rgba(255, 255, 255, 0) 80%);
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ease-curtain: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
@@ -427,8 +410,8 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 84px;
-  height: 84px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
   background: #ffffff;
   border: 1.5px solid var(--accent-taupe);
@@ -460,23 +443,33 @@ html, body {
 
 .medallion-monogram {
   font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.35rem;
-  font-weight: 600;
-  font-style: italic;
-  color: var(--text-primary);
-  line-height: 1;
-  letter-spacing: 2px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  line-height: 1.1;
+  text-align: center;
+  width: 100%;
 }
 
-.medallion-monogram .amp {
+.medallion-monogram .medallion-groom,
+.medallion-monogram .medallion-bride {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: var(--text-primary);
+  font-style: normal;
+  line-height: 1.15;
+}
+
+.medallion-monogram .medallion-amp {
   font-family: 'Alex Brush', cursive;
-  font-size: 1.45rem;
+  font-size: 1.08rem;
   font-style: normal;
   color: #a68c68;
-  margin: 0 3px;
+  line-height: 0.85;
+  margin: 1px 0;
 }
 
 @keyframes swing {
@@ -696,16 +689,19 @@ body:has(#invitationStage.stage-active) .shadows-stage {
   }
 }
 
-/* Revealed Names Banner: Seamlessly integrated into romantic night ambience (No background, No border) */
+/* Revealed Names Banner: Vertical Stack (Groom Top, weds Middle, Bride Bottom) */
 .revealed-names-banner {
   position: absolute;
-  top: 11%;
+  top: clamp(8px, 2.2vh, 20px);
   left: 50%;
   transform: translate(-50%, -6px);
   z-index: 15;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  gap: 1px;
   padding: 0;
   margin: 0;
   background: transparent;
@@ -715,7 +711,6 @@ body:has(#invitationStage.stage-active) .shadows-stage {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   pointer-events: none;
-  white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.6s ease, transform 0.6s var(--ease-smooth);
@@ -728,25 +723,37 @@ body:has(#invitationStage.stage-active) .shadows-stage {
 }
 
 .revealed-names-banner .revealed-name-item {
-  display: inline-block;
+  display: block;
   overflow: hidden;
-  max-width: 0;
+  max-height: 0;
   opacity: 0;
-  transform: scale(0.92);
-  transition: max-width 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+  transform: translateY(-4px) scale(0.95);
+  transition: max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.45s ease,
               transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              margin 0.5s ease;
+              margin 0.4s ease;
   margin: 0;
   padding: 0;
   line-height: 1.2;
-  vertical-align: middle;
+  white-space: nowrap;
 }
 
-.revealed-name-groom,
+.revealed-name-groom {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 4.2vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #fff6da;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.95),
+    0 0 10px rgba(255, 215, 0, 0.75),
+    0 0 22px rgba(230, 160, 30, 0.55),
+    0 0 35px rgba(212, 175, 55, 0.35);
+}
+
 .revealed-name-bride {
   font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 3.8vw, 1.34rem);
+  font-size: clamp(1.05rem, 4vw, 1.4rem);
   font-weight: 600;
   letter-spacing: 1.2px;
   color: #fff6da;
@@ -759,7 +766,7 @@ body:has(#invitationStage.stage-active) .shadows-stage {
 
 .revealed-name-weds {
   font-family: var(--font-script);
-  font-size: clamp(1.45rem, 5.2vw, 1.82rem);
+  font-size: clamp(1.35rem, 5vw, 1.82rem);
   font-weight: 400;
   color: #ffd700;
   line-height: 1;
@@ -769,40 +776,40 @@ body:has(#invitationStage.stage-active) .shadows-stage {
     0 0 25px rgba(255, 170, 0, 0.7);
 }
 
-/* State: Only Groom revealed */
+/* State: Only Groom revealed (Groom on top) */
 .revealed-names-banner.state-groom .revealed-name-groom {
-  max-width: 280px;
+  max-height: 50px;
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
 }
 
-/* State: Only Bride revealed */
+/* State: Only Bride revealed (Bride at bottom) */
 .revealed-names-banner.state-bride .revealed-name-bride {
-  max-width: 280px;
+  max-height: 50px;
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
 }
 
-/* State: Both revealed -> Groom weds Bride with celebratory ambient glow matching the starlight */
+/* State: Both revealed -> Groom (top), weds (middle), Bride (bottom) */
 .revealed-names-banner.state-both .revealed-name-groom {
-  max-width: 280px;
+  max-height: 50px;
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
   animation: namesGlowCelebrate 3.5s ease-in-out infinite alternate;
 }
 
 .revealed-names-banner.state-both .revealed-name-weds {
-  max-width: 100px;
+  max-height: 40px;
   opacity: 1;
-  transform: scale(1);
-  margin: 0 10px;
+  transform: translateY(0) scale(1);
+  margin: 1px 0;
   animation: namesGlowCelebrate 3.5s ease-in-out infinite alternate;
 }
 
 .revealed-names-banner.state-both .revealed-name-bride {
-  max-width: 280px;
+  max-height: 50px;
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
   animation: namesGlowCelebrate 3.5s ease-in-out infinite alternate;
 }
 
@@ -1001,47 +1008,6 @@ body:has(#invitationStage.stage-active) .shadows-stage {
   border-radius: 12px;
 }
 
-.stage-subheading {
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: var(--accent-taupe);
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.btn-minimalist-action {
-  font-family: var(--font-sans);
-  font-size: clamp(0.82rem, 2.4vw, 0.9rem);
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  color: #ffffff;
-  background: var(--text-primary);
-  border: 1px solid var(--text-primary);
-  border-radius: 30px;
-  padding: 11px 26px;
-  cursor: pointer;
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-minimalist-action:hover {
-  background: #383430;
-  border-color: #383430;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-}
-
-.btn-minimalist-action:active {
-  transform: translateY(0) scale(0.98);
-}
-
 
 /* ==========================================================================
    STAGE 3 & 4: TIMELINE & INVITATION (SINGLE FRAME FIT & NO SCROLLBAR)
@@ -1116,12 +1082,32 @@ body.timeline-active .scene-viewport {
 }
 
 .crest-text {
-  font-family: var(--font-script);
-  font-size: 1.7rem;
-  color: #b89047;
-  line-height: 1;
-  letter-spacing: 2px;
+  font-family: var(--font-serif);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.crest-text .crest-groom,
+.crest-text .crest-bride {
+  font-family: var(--font-serif);
+  font-size: 0.96rem;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #8c6e32;
   text-shadow: 0 1px 2px rgba(184, 144, 71, 0.2);
+}
+
+.crest-text .crest-amp {
+  font-family: var(--font-script);
+  font-size: 1.18rem;
+  color: #c5a059;
+  line-height: 0.85;
+  margin: 1px 0;
 }
 
 .crest-dots {
@@ -1170,24 +1156,34 @@ body.timeline-active .scene-viewport {
 
 .banner-title {
   font-family: var(--font-serif);
-  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-size: clamp(1.15rem, 3.8vw, 1.45rem);
   font-weight: 600;
   color: #1a1816;
   line-height: 1.2;
   margin: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 0 5px;
+  text-align: center;
+  gap: 2px;
 }
 
-.banner-title .amp {
+.banner-title .banner-groom,
+.banner-title .banner-bride {
+  display: block;
+  white-space: nowrap;
+}
+
+.banner-title .amp,
+.banner-title .banner-amp {
   font-family: var(--font-script);
   font-size: 1.45rem;
   color: #c5a059;
   font-weight: 400;
-  padding: 0 2px;
+  line-height: 1;
+  margin: 1px 0;
+  display: block;
 }
 
 .banner-verse {
@@ -1369,9 +1365,44 @@ body.timeline-active .scene-viewport {
   line-height: 1.25;
 }
 
-/* Sweeping light shimmer on timeline items */
-.timeline-item-glow {
-  display: none !important;
+/* Sacred Venue Map Directions Link */
+.timeline-map-link {
+  position: relative;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  padding: 4px 11px;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #6b4c1b;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(197, 155, 39, 0.45);
+  border-radius: 14px;
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+  cursor: pointer;
+  width: fit-content;
+  pointer-events: auto;
+}
+
+.timeline-map-link:hover {
+  transform: translateY(-1px);
+  color: #432b05;
+  background: rgba(212, 175, 55, 0.22);
+  border-color: rgba(197, 155, 39, 0.8);
+  box-shadow: 0 3px 8px rgba(197, 155, 39, 0.2);
+}
+
+.timeline-map-icon {
+  width: 12px;
+  height: 12px;
+  color: #b8860b;
 }
 
 /* Item 5: Live Countdown to Celebration */
@@ -1830,21 +1861,29 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
   color: #fff6e8;
 }
 
-.seal-monogram {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: 2px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+.seal-rings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff2db;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  margin-bottom: 2px;
+}
+
+.seal-rings-svg {
+  width: 34px;
+  height: 22px;
+  display: block;
 }
 
 .seal-date {
   font-family: var(--font-sans);
-  font-size: 0.54rem;
+  font-size: 0.52rem;
   font-weight: 600;
   letter-spacing: 1px;
   color: #ffd8a8;
   margin-top: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 /* Wax Seal Broken / Hidden State */
@@ -1856,7 +1895,7 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
 }
 
 /* ==========================================================================
-   STAGE 4: THE WEDDING INVITATION CARD (ACTUAL IMAGE ecard.jpeg)
+   STAGE 4: THE WEDDING INVITATION CARD (ACTUAL IMAGE invitation_card.jpeg)
    ========================================================================== */
 
 .wedding-card {
@@ -1866,7 +1905,7 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
   right: 15px;
   height: auto;
   min-height: unset;
-  aspect-ratio: 880 / 1280;
+  aspect-ratio: 771 / 1600;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 
@@ -1988,11 +2027,6 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
   transform-style: preserve-3d;
 }
 
-.card-inner.card-image-container::before,
-.card-inner.card-image-container::after {
-  display: none !important;
-}
-
 .actual-card-img {
   width: 100%;
   height: 100%;
@@ -2021,11 +2055,14 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
 }
 
 .wedding-card.elevated .actual-card-img {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
+  width: 100vw !important;
+  width: 100dvw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  object-fit: cover !important;
+  object-position: center top !important;
   border-radius: 0 !important;
   display: block !important;
   background: #ffffff !important;
@@ -2074,6 +2111,10 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
     box-shadow: none !important;
   }
 
+  .revealed-names-banner {
+    top: clamp(8px, 2.2vh, 18px);
+  }
+
   .btn-next-arrow {
     width: 40px;
     height: 40px;
@@ -2108,18 +2149,19 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
   }
 
   .tassel-medallion {
-    width: 78px;
-    height: 78px;
-    padding: 8px;
+    width: 96px;
+    height: 96px;
+    padding: 7px;
   }
 
-  .medallion-monogram {
-    font-size: 1.22rem;
-    letter-spacing: 1.5px;
+  .medallion-monogram .medallion-groom,
+  .medallion-monogram .medallion-bride {
+    font-size: 0.82rem;
+    letter-spacing: 0.6px;
   }
 
-  .medallion-monogram .amp {
-    font-size: 1.32rem;
+  .medallion-monogram .medallion-amp {
+    font-size: 1rem;
   }
 
   /* Envelope & 3D Stages on Mobile */
@@ -2148,18 +2190,19 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
     height: 62px;
   }
 
-  .seal-monogram {
-    font-size: 1.05rem;
+  .seal-rings-svg {
+    width: 30px;
+    height: 20px;
   }
 
   .seal-date {
-    font-size: 0.52rem;
+    font-size: 0.50rem;
   }
 
   /* The Wedding Card on Mobile */
   .wedding-card {
     min-height: unset;
-    aspect-ratio: 880 / 1280;
+    aspect-ratio: 771 / 1600;
     top: 8px;
     left: 8px;
     right: 8px;
@@ -2167,18 +2210,6 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
 
   .wedding-card.peeking {
     transform: translateY(-80px) scale(0.97);
-  }
-
-  .card-inner {
-    padding: 24px 14px 20px;
-  }
-
-  .card-inner::before {
-    inset: 8px;
-  }
-
-  .card-inner::after {
-    inset: 12px;
   }
 
 }
@@ -2194,18 +2225,19 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
   }
 
   .tassel-medallion {
-    width: 72px;
-    height: 72px;
-    padding: 6px;
+    width: 88px;
+    height: 88px;
+    padding: 5px;
   }
 
-  .medallion-monogram {
-    font-size: 1.12rem;
-    letter-spacing: 1.2px;
+  .medallion-monogram .medallion-groom,
+  .medallion-monogram .medallion-bride {
+    font-size: 0.76rem;
+    letter-spacing: 0.4px;
   }
 
-  .medallion-monogram .amp {
-    font-size: 1.22rem;
+  .medallion-monogram .medallion-amp {
+    font-size: 0.94rem;
   }
 
   .envelope-wrapper {
@@ -2222,7 +2254,7 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
 
   .wedding-card {
     min-height: unset;
-    aspect-ratio: 880 / 1280;
+    aspect-ratio: 771 / 1600;
     top: 6px;
     left: 6px;
     right: 6px;
@@ -2230,10 +2262,6 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
 
   .wedding-card.peeking {
     transform: translateY(-70px) scale(0.97);
-  }
-
-  .card-inner {
-    padding: 20px 10px 16px;
   }
 
 }
