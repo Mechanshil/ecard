@@ -88,6 +88,67 @@ html, body {
   transform: scale(0.95);
 }
 
+.audio-track-badge {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  right: calc(max(16px, env(safe-area-inset-right, 16px)) + 44px);
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px 0 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(140, 120, 81, 0.28);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary, #332f2c);
+  font-family: var(--font-secondary, "Cinzel", serif);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(10px);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  white-space: nowrap;
+}
+
+.audio-track-badge.visible,
+.floating-audio-btn:hover + .audio-track-badge,
+.audio-track-badge:hover,
+.audio-track-badge:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.audio-track-badge:hover {
+  background: #ffffff;
+  border-color: var(--accent-taupe);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+.audio-track-badge:active {
+  transform: scale(0.96);
+}
+
+.audio-track-badge .track-note-icon {
+  font-size: 12px;
+  color: var(--accent-taupe, #8c7851);
+  display: inline-block;
+  animation: noteWiggle 2s infinite ease-in-out;
+}
+
+@keyframes noteWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-10deg) scale(1.1); }
+  75% { transform: rotate(10deg) scale(1.1); }
+}
+
 .music-icon {
   width: 18px;
   height: 18px;
@@ -1648,7 +1709,9 @@ body:has(.wedding-card.elevated) .scene-viewport {
 body:has(.card-elevated) #ambientCanvas,
 body:has(.wedding-card.elevated) #ambientCanvas,
 body:has(.card-elevated) .floating-audio-btn,
-body:has(.wedding-card.elevated) .floating-audio-btn {
+body:has(.wedding-card.elevated) .floating-audio-btn,
+body:has(.card-elevated) .audio-track-badge,
+body:has(.wedding-card.elevated) .audio-track-badge {
   display: none !important;
 }
 
@@ -2141,6 +2204,15 @@ body:has(.wedding-card.elevated) .floating-audio-btn {
   .floating-audio-btn .music-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .audio-track-badge {
+    top: max(12px, env(safe-area-inset-top, 12px));
+    right: calc(max(12px, env(safe-area-inset-right, 12px)) + 38px);
+    height: 32px;
+    padding: 0 10px 0 8px;
+    font-size: 10px;
+    border-radius: 16px;
   }
 
   /* Curtain & Tassel on Mobile */

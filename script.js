@@ -73,24 +73,46 @@
   const ambientCanvas = document.getElementById('ambientCanvas');
 
   // =========================================================================
-  // 2. AUDIO ENGINE (Romantic Celeste Music-Box Default + Custom Audio Support)
+  // 2. AUDIO PLAYLIST & ENGINE (Randomized Hook Selection + Custom Audio)
   // =========================================================================
-  // The built-in romantic celeste music-box melody plays by default on launch.
-  // Guests can mute/shut it off anytime via the floating audio toggle button.
-  // (Optional: Set customMusicSrc below if you wish to use an external audio file).
+  // Curated playlist with exact timestamps pointing to the most iconic/interesting parts:
+  // - Track 1: Suzume (RADWIMPS ft. Toaka) -> 73.5s (The soaring orchestral chorus)
+  // - Track 2: Kalengkhi Yamakrou (Maring Song) -> 30.0s (Beat drop & main rhythm entrance)
+  const AUDIO_PLAYLIST = [
+    {
+      id: 'suzume',
+      title: 'すずめ (Suzume) - RADWIMPS ft. 十明',
+      shortTitle: 'すずめ (Suzume)',
+      src: 'assets/suzume.mp3',
+      fallbackSrc: 'assets/RADWIMPS - すずめ feat.十明 [Official Lyric Video] - RADWIMPS.mp3',
+      startTime: 73.5, // 01:13.5 (The iconic soaring chorus: "Nande naiteru no to kikare...")
+      targetVolume: 0.42
+    },
+    {
+      id: 'maring',
+      title: 'Kalengkhi Yamakrou - Rang-In-Thang',
+      shortTitle: 'Kalengkhi Yamakrou',
+      src: 'assets/kalengkhi-yamakrou.mp3',
+      fallbackSrc: 'assets/YTDown_YouTube_Maring-Song-Kalengkhi-Yamakrou_Media_d8Wnm1OmMjQ_006_128k.mp3',
+      startTime: 30.0, // 00:30.0 (Beat drops into rhythm & main vocal verse; chorus at 136.0s)
+      targetVolume: 0.50
+    }
+  ];
+
   const AUDIO_CONFIG = {
-    customMusicSrc: null, // Set to 'assets/music.mp3' or URL to use custom song instead
-    volume: 0.5,          // Custom audio volume (0.0 to 1.0)
-    fadeInDuration: 1.5,  // Volume fade-in duration (seconds)
-    loop: true            // Loop continuously
+    fadeInDuration: 1.5, // Volume fade-in duration (seconds)
+    fadeOutDuration: 0.8 // Volume fade-out duration (seconds)
   };
 
+  // Select a random starting song from the playlist
+  let currentTrackIndex = Math.floor(Math.random() * AUDIO_PLAYLIST.length);
   let audioCtx = null;
   let musicGainNode = null;
   let synthMusicInterval = null;
   let customAudio = null;
   let isUsingCustomAudio = false;
   let customAudioFadeInterval = null;
+  let hasAppliedStartTime = false;
 
   function initAudio() {
     if (state.audioInitialized && audioCtx) return;
@@ -108,16 +130,64 @@
     }
   }
 
-  function initCustomAudio() {
-    if (customAudio || !AUDIO_CONFIG.customMusicSrc) return;
+  function seekToInterestingPart() {
+    if (hasAppliedStartTime || !customAudio) return;
+    const track = AUDIO_PLAYLIST[currentTrackIndex];
+    if (!track || typeof track.startTime !== 'number' || track.startTime <= 0) {
+      hasAppliedStartTime = true;
+      return;
+    }
+
+    try {
+      if (customAudio.seekable && customAudio.seekable.length > 0) {
+        customAudio.currentTime = track.startTime;
+        hasAppliedStartTime = true;
+      } else if (customAudio.readyState >= 1) { // HAVE_METADATA or higher
+        customAudio.currentTime = track.startTime;
+        hasAppliedStartTime = true;
+      }
+    } catch (err) {
+      // Audio stream is buffering or negotiating range; will retry on canplay/play
+    }
+  }
+
+  function initCustomAudioPlayer() {
+    if (customAudio) return;
     try {
       customAudio = new Audio();
-      customAudio.src = AUDIO_CONFIG.customMusicSrc;
-      customAudio.loop = AUDIO_CONFIG.loop;
       customAudio.preload = 'auto';
 
+      const handleReadyToSeek = () => {
+        seekToInterestingPart();
+      };
+
+      customAudio.addEventListener('loadedmetadata', handleReadyToSeek);
+      customAudio.addEventListener('canplay', handleReadyToSeek);
+
+      // Playback ended: pick another random track (or alternate) and seamlessly continue
+      customAudio.addEventListener('ended', () => {
+        let nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
+        if (AUDIO_PLAYLIST.length > 2) {
+          do {
+            nextIndex = Math.floor(Math.random() * AUDIO_PLAYLIST.length);
+          } while (nextIndex === currentTrackIndex);
+        }
+        playTrack(nextIndex);
+      });
+
+      // Graceful error fallback
       customAudio.addEventListener('error', () => {
-        console.info(`[Audio] Custom audio track "${AUDIO_CONFIG.customMusicSrc}" unavailable. Using romantic celeste music-box.`);
+        const track = AUDIO_PLAYLIST[currentTrackIndex];
+        if (track && track.fallbackSrc && !customAudio.src.includes(encodeURI(track.fallbackSrc))) {
+          console.info(`[Audio] Retrying "${track.title}" with fallback path...`);
+          customAudio.src = track.fallbackSrc;
+          customAudio.load();
+          if (state.musicPlaying && !state.userMuted) {
+            playTrack(currentTrackIndex);
+          }
+          return;
+        }
+        console.info('[Audio] Custom audio unavailable. Using romantic celeste music-box.');
         if (state.musicPlaying && isUsingCustomAudio && !state.userMuted) {
           isUsingCustomAudio = false;
           startSynthMusic();
@@ -183,22 +253,44 @@
   }
 
   function updateAudioUI(isPlaying) {
+    const track = AUDIO_PLAYLIST[currentTrackIndex];
+    const trackName = track ? track.shortTitle : 'Romantic Music';
+
     if (isPlaying) {
       audioToggle.classList.add('playing');
-      audioToggle.setAttribute('title', 'Pause Music');
-      audioToggle.setAttribute('aria-label', 'Pause Music');
+      audioToggle.setAttribute('title', `Pause Music (${trackName})`);
+      audioToggle.setAttribute('aria-label', `Pause Romantic Background Music: ${trackName}`);
     } else {
       audioToggle.classList.remove('playing');
-      audioToggle.setAttribute('title', 'Play Music');
-      audioToggle.setAttribute('aria-label', 'Play Music');
+      audioToggle.setAttribute('title', `Play Music (${trackName})`);
+      audioToggle.setAttribute('aria-label', `Play Romantic Background Music: ${trackName}`);
+    }
+
+    // Update track badge if present in DOM
+    const trackBadge = document.getElementById('audioTrackBadge');
+    if (trackBadge) {
+      const textElem = trackBadge.querySelector('.track-name-text') || trackBadge;
+      textElem.textContent = trackName;
+      trackBadge.setAttribute('title', `Now Playing: ${track ? track.title : trackName} (Click to switch song)`);
+
+      if (isPlaying) {
+        trackBadge.classList.add('visible');
+        clearTimeout(trackBadge._hideTimer);
+        trackBadge._hideTimer = setTimeout(() => {
+          trackBadge.classList.remove('visible');
+        }, 4500);
+      } else {
+        trackBadge.classList.remove('visible');
+      }
     }
   }
 
-  function fadeInCustomAudio() {
+  function fadeInCustomAudio(targetVolume = 0.5) {
     if (!customAudio) return;
     clearInterval(customAudioFadeInterval);
-    const target = AUDIO_CONFIG.volume;
-    const step = target / (AUDIO_CONFIG.fadeInDuration * 20);
+    const target = targetVolume;
+    const duration = AUDIO_CONFIG.fadeInDuration || 1.5;
+    const step = target / (duration * 20);
     customAudioFadeInterval = setInterval(() => {
       if (!customAudio || !state.musicPlaying || state.userMuted) {
         clearInterval(customAudioFadeInterval);
@@ -332,30 +424,81 @@
     }
   }
 
+  function playTrack(index) {
+    if (!AUDIO_PLAYLIST || !AUDIO_PLAYLIST.length) return;
+    currentTrackIndex = (index + AUDIO_PLAYLIST.length) % AUDIO_PLAYLIST.length;
+    const track = AUDIO_PLAYLIST[currentTrackIndex];
+    hasAppliedStartTime = false;
+
+    if (!customAudio) {
+      initCustomAudioPlayer();
+    }
+    if (!customAudio) return;
+
+    stopSynthMusic();
+
+    const targetSrc = track.src;
+    if (!customAudio.src || !customAudio.src.includes(targetSrc)) {
+      customAudio.src = targetSrc;
+      customAudio.preload = 'auto';
+      customAudio.load();
+    }
+
+    customAudio.volume = 0;
+    state.musicPlaying = true;
+    state.userMuted = false;
+    isUsingCustomAudio = true;
+    updateAudioUI(true);
+
+    const playPromise = customAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        stopSynthMusic();
+        seekToInterestingPart();
+        fadeInCustomAudio(track.targetVolume || 0.5);
+      }).catch(err => {
+        console.info('[Audio] Playback deferred or user interaction required:', err);
+        isUsingCustomAudio = false;
+        startSynthMusic();
+      });
+    }
+  }
+
   // Unified Background Music Controller
   function startBackgroundMusic() {
     if (state.userMuted) return; // User deliberately shut it off
     state.musicPlaying = true;
-    updateAudioUI(true);
 
-    // If custom audio is explicitly configured, attempt playback
-    if (AUDIO_CONFIG.customMusicSrc) {
-      if (!customAudio) initCustomAudio();
-      if (customAudio) {
-        customAudio.volume = 0;
+    if (AUDIO_PLAYLIST && AUDIO_PLAYLIST.length > 0) {
+      const track = AUDIO_PLAYLIST[currentTrackIndex];
+      if (!customAudio) {
+        initCustomAudioPlayer();
+        playTrack(currentTrackIndex);
+        return;
+      }
+
+      if (customAudio.paused) {
+        seekToInterestingPart();
         isUsingCustomAudio = true;
+        updateAudioUI(true);
         const playPromise = customAudio.play();
-
         if (playPromise !== undefined) {
           playPromise.then(() => {
-            fadeInCustomAudio();
+            stopSynthMusic();
+            seekToInterestingPart();
+            fadeInCustomAudio(track.targetVolume || 0.5);
           }).catch(err => {
-            console.info('[Audio] Custom audio playback deferred or unavailable. Using celeste music-box:', err);
+            console.info('[Audio] Playback blocked by browser policy, waiting for gesture:', err);
             isUsingCustomAudio = false;
             startSynthMusic();
           });
           return;
         }
+      } else {
+        isUsingCustomAudio = true;
+        updateAudioUI(true);
+        fadeInCustomAudio(track.targetVolume || 0.5);
+        return;
       }
     }
 
@@ -392,6 +535,15 @@
 
   audioToggle.addEventListener('click', toggleMusic);
 
+  const audioTrackBadge = document.getElementById('audioTrackBadge');
+  if (audioTrackBadge) {
+    audioTrackBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
+      playTrack(nextIndex);
+    });
+  }
+
   // Autoplay Initialization: Starts by default and unlocks seamlessly on first user interaction
   function initAudioAutoplay() {
     initAudio();
@@ -401,12 +553,17 @@
       if (state.userMuted) return;
       if (!audioCtx) initAudio();
       if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume().then(() => {
-          if (!state.userMuted && (!state.musicPlaying || !synthMusicInterval)) {
-            startBackgroundMusic();
-          }
-        }).catch(() => {});
-      } else if (!state.userMuted && (!state.musicPlaying || !synthMusicInterval)) {
+        audioCtx.resume().catch(() => {});
+      }
+      // If we have custom songs and custom audio is not actively playing, trigger playback on gesture
+      if (AUDIO_PLAYLIST && AUDIO_PLAYLIST.length > 0) {
+        if (!customAudio || customAudio.paused) {
+          stopSynthMusic();
+          playTrack(currentTrackIndex);
+          return;
+        }
+      }
+      if (!state.musicPlaying || !synthMusicInterval) {
         startBackgroundMusic();
       }
     };
