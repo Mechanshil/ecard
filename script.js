@@ -20,7 +20,7 @@
     invitationShown: false,
     envelopeOpened: false,
     cardElevated: false,
-    musicPlaying: true,
+    musicPlaying: false,
     userMuted: false,
     audioInitialized: false,
     tilt: { x: 0, y: 0, targetX: 0, targetY: 0 },
@@ -73,11 +73,11 @@
   const ambientCanvas = document.getElementById('ambientCanvas');
 
   // =========================================================================
-  // 2. AUDIO PLAYLIST & ENGINE (Randomized Hook Selection + Custom Audio)
+  // 2. AUDIO PLAYLIST & ENGINE (Curated Background Songs + SFX Engine)
   // =========================================================================
-  // Curated playlist with exact timestamps pointing to the most iconic/interesting parts:
-  // - Track 1: Suzume (RADWIMPS ft. Toaka) -> 73.5s (The soaring orchestral chorus)
-  // - Track 2: Kalengkhi Yamakrou (Maring Song) -> 30.0s (Beat drop & main rhythm entrance)
+  // The background music is strictly limited to the two curated songs:
+  // - Track 1: Suzume (RADWIMPS ft. Toaka) -> 73.5s (The soaring orchestral chorus hook)
+  // - Track 2: Kalengkhi Yamakrou (Maring Song) -> 30.0s (Beat drop & rhythm entrance)
   const AUDIO_PLAYLIST = [
     {
       id: 'suzume',
@@ -107,23 +107,17 @@
   // Select a random starting song from the playlist
   let currentTrackIndex = Math.floor(Math.random() * AUDIO_PLAYLIST.length);
   let audioCtx = null;
-  let musicGainNode = null;
-  let synthMusicInterval = null;
   let customAudio = null;
-  let isUsingCustomAudio = false;
   let customAudioFadeInterval = null;
   let hasAppliedStartTime = false;
 
+  // Web Audio Context for Interactive UI Sound Effects (Harp chime, wax pop, spring pluck, notes)
   function initAudio() {
     if (state.audioInitialized && audioCtx) return;
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) return;
       audioCtx = new AudioContextClass();
-      musicGainNode = audioCtx.createGain();
-      // Set warm, audible, comfortable default presence (approx -16dB RMS)
-      musicGainNode.gain.setValueAtTime(0.38, audioCtx.currentTime);
-      musicGainNode.connect(audioCtx.destination);
       state.audioInitialized = true;
     } catch (e) {
       console.warn('AudioContext not supported or restricted', e);
@@ -139,15 +133,15 @@
     }
 
     try {
-      if (customAudio.seekable && customAudio.seekable.length > 0) {
+      if (customAudio.readyState >= 1) { // HAVE_METADATA or higher
         customAudio.currentTime = track.startTime;
         hasAppliedStartTime = true;
-      } else if (customAudio.readyState >= 1) { // HAVE_METADATA or higher
+      } else if (customAudio.seekable && customAudio.seekable.length > 0) {
         customAudio.currentTime = track.startTime;
         hasAppliedStartTime = true;
       }
     } catch (err) {
-      // Audio stream is buffering or negotiating range; will retry on canplay/play
+      // Audio stream is buffering or negotiating range; will retry on canplay/playing
     }
   }
 
@@ -163,34 +157,34 @@
 
       customAudio.addEventListener('loadedmetadata', handleReadyToSeek);
       customAudio.addEventListener('canplay', handleReadyToSeek);
+      customAudio.addEventListener('playing', () => {
+        seekToInterestingPart();
+        state.musicPlaying = true;
+        updateAudioUI(true);
+      });
 
-      // Playback ended: pick another random track (or alternate) and seamlessly continue
+      // Playback ended: switch to the other song in the playlist and seamlessly continue
       customAudio.addEventListener('ended', () => {
-        let nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
-        if (AUDIO_PLAYLIST.length > 2) {
-          do {
-            nextIndex = Math.floor(Math.random() * AUDIO_PLAYLIST.length);
-          } while (nextIndex === currentTrackIndex);
-        }
+        const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
         playTrack(nextIndex);
       });
 
-      // Graceful error fallback
+      // Graceful error fallback: retry fallback path or switch to alternate song
       customAudio.addEventListener('error', () => {
         const track = AUDIO_PLAYLIST[currentTrackIndex];
         if (track && track.fallbackSrc && !customAudio.src.includes(encodeURI(track.fallbackSrc))) {
           console.info(`[Audio] Retrying "${track.title}" with fallback path...`);
           customAudio.src = track.fallbackSrc;
           customAudio.load();
-          if (state.musicPlaying && !state.userMuted) {
+          if (!state.userMuted) {
             playTrack(currentTrackIndex);
           }
           return;
         }
-        console.info('[Audio] Custom audio unavailable. Using romantic celeste music-box.');
-        if (state.musicPlaying && isUsingCustomAudio && !state.userMuted) {
-          isUsingCustomAudio = false;
-          startSynthMusic();
+        console.warn(`[Audio] Track "${track ? track.title : ''}" unavailable. Switching to alternate song.`);
+        const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
+        if (!state.userMuted) {
+          playTrack(nextIndex);
         }
       });
     } catch (e) {
@@ -292,7 +286,7 @@
     const duration = AUDIO_CONFIG.fadeInDuration || 1.5;
     const step = target / (duration * 20);
     customAudioFadeInterval = setInterval(() => {
-      if (!customAudio || !state.musicPlaying || state.userMuted) {
+      if (!customAudio || customAudio.paused || state.userMuted) {
         clearInterval(customAudioFadeInterval);
         return;
       }
@@ -324,106 +318,6 @@
     }, 40);
   }
 
-  // Romantic Celeste & Crystal Music-Box Melody Engine
-  function startSynthMusic() {
-    if (!audioCtx) initAudio();
-    if (!audioCtx) return;
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
-
-    if (synthMusicInterval) {
-      clearTimeout(synthMusicInterval);
-      synthMusicInterval = null;
-    }
-
-    // Pentatonic romantic wedding arpeggio melody (Gentle, pure, heartfelt)
-    const melody = [
-      { note: 261.63, dur: 0.85 }, // C4
-      { note: 329.63, dur: 0.85 }, // E4
-      { note: 392.00, dur: 0.85 }, // G4
-      { note: 493.88, dur: 0.85 }, // B4
-      { note: 523.25, dur: 1.30 }, // C5
-      { note: 440.00, dur: 0.85 }, // A4
-      { note: 392.00, dur: 0.85 }, // G4
-      { note: 329.63, dur: 1.30 }, // E4
-      { note: 349.23, dur: 0.85 }, // F4
-      { note: 392.00, dur: 0.85 }, // G4
-      { note: 440.00, dur: 0.85 }, // A4
-      { note: 523.25, dur: 1.50 }, // C5
-      { note: 392.00, dur: 0.85 }, // G4
-      { note: 329.63, dur: 1.70 }  // E4
-    ];
-
-    let step = 0;
-
-    function playMelodyStep() {
-      if (!state.musicPlaying || state.userMuted || isUsingCustomAudio || !audioCtx) return;
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
-      }
-
-      const current = melody[step % melody.length];
-      const now = audioCtx.currentTime;
-
-      try {
-        // 1. Warm Fundamental Celeste Tine (Sine)
-        const osc1 = audioCtx.createOscillator();
-        const gain1 = audioCtx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(current.note, now);
-
-        // 2. Crystal Music-Box Bell Chime (Octave overtone harmonic)
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(current.note * 2, now);
-
-        // 3. Warm Acoustic Lowpass Filter (eliminates digital harshness)
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(2600, now);
-
-        // Envelopes: Crisp musical attack + gentle acoustic ring-out
-        gain1.gain.setValueAtTime(0.001, now);
-        gain1.gain.exponentialRampToValueAtTime(0.32, now + 0.02);
-        gain1.gain.exponentialRampToValueAtTime(0.0001, now + current.dur * 1.4);
-
-        gain2.gain.setValueAtTime(0.001, now);
-        gain2.gain.exponentialRampToValueAtTime(0.10, now + 0.015);
-        gain2.gain.exponentialRampToValueAtTime(0.0001, now + current.dur * 0.75);
-
-        // Connections
-        osc1.connect(gain1);
-        gain1.connect(filter);
-
-        osc2.connect(gain2);
-        gain2.connect(filter);
-
-        filter.connect(musicGainNode);
-
-        osc1.start(now);
-        osc1.stop(now + current.dur * 1.5);
-        osc2.start(now);
-        osc2.stop(now + current.dur * 0.8);
-      } catch (err) {
-        // Ignore single-note glitch
-      }
-
-      step++;
-      synthMusicInterval = setTimeout(playMelodyStep, current.dur * 680);
-    }
-
-    playMelodyStep();
-  }
-
-  function stopSynthMusic() {
-    if (synthMusicInterval) {
-      clearTimeout(synthMusicInterval);
-      synthMusicInterval = null;
-    }
-  }
-
   function playTrack(index) {
     if (!AUDIO_PLAYLIST || !AUDIO_PLAYLIST.length) return;
     currentTrackIndex = (index + AUDIO_PLAYLIST.length) % AUDIO_PLAYLIST.length;
@@ -435,8 +329,6 @@
     }
     if (!customAudio) return;
 
-    stopSynthMusic();
-
     const targetSrc = track.src;
     if (!customAudio.src || !customAudio.src.includes(targetSrc)) {
       customAudio.src = targetSrc;
@@ -445,21 +337,19 @@
     }
 
     customAudio.volume = 0;
-    state.musicPlaying = true;
     state.userMuted = false;
-    isUsingCustomAudio = true;
-    updateAudioUI(true);
 
     const playPromise = customAudio.play();
     if (playPromise !== undefined) {
       playPromise.then(() => {
-        stopSynthMusic();
+        state.musicPlaying = true;
         seekToInterestingPart();
         fadeInCustomAudio(track.targetVolume || 0.5);
+        updateAudioUI(true);
       }).catch(err => {
-        console.info('[Audio] Playback deferred or user interaction required:', err);
-        isUsingCustomAudio = false;
-        startSynthMusic();
+        console.info('[Audio] Playback waiting for user gesture:', err.name || err);
+        state.musicPlaying = false;
+        updateAudioUI(false);
       });
     }
   }
@@ -467,44 +357,37 @@
   // Unified Background Music Controller
   function startBackgroundMusic() {
     if (state.userMuted) return; // User deliberately shut it off
-    state.musicPlaying = true;
 
-    if (AUDIO_PLAYLIST && AUDIO_PLAYLIST.length > 0) {
-      const track = AUDIO_PLAYLIST[currentTrackIndex];
-      if (!customAudio) {
-        initCustomAudioPlayer();
-        playTrack(currentTrackIndex);
-        return;
-      }
+    if (!customAudio) {
+      initCustomAudioPlayer();
+    }
+    if (!customAudio) return;
 
-      if (customAudio.paused) {
-        seekToInterestingPart();
-        isUsingCustomAudio = true;
-        updateAudioUI(true);
-        const playPromise = customAudio.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            stopSynthMusic();
-            seekToInterestingPart();
-            fadeInCustomAudio(track.targetVolume || 0.5);
-          }).catch(err => {
-            console.info('[Audio] Playback blocked by browser policy, waiting for gesture:', err);
-            isUsingCustomAudio = false;
-            startSynthMusic();
-          });
-          return;
-        }
-      } else {
-        isUsingCustomAudio = true;
-        updateAudioUI(true);
-        fadeInCustomAudio(track.targetVolume || 0.5);
-        return;
-      }
+    const track = AUDIO_PLAYLIST[currentTrackIndex];
+    if (!customAudio.src || !customAudio.src.includes(track.src)) {
+      playTrack(currentTrackIndex);
+      return;
     }
 
-    // Default: Built-in romantic celeste music-box melody
-    isUsingCustomAudio = false;
-    startSynthMusic();
+    if (customAudio.paused) {
+      const playPromise = customAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          state.musicPlaying = true;
+          seekToInterestingPart();
+          fadeInCustomAudio(track.targetVolume || 0.5);
+          updateAudioUI(true);
+        }).catch(err => {
+          console.info('[Audio] Playback waiting for user gesture:', err.name || err);
+          state.musicPlaying = false;
+          updateAudioUI(false);
+        });
+      }
+    } else {
+      state.musicPlaying = true;
+      updateAudioUI(true);
+      fadeInCustomAudio(track.targetVolume || 0.5);
+    }
   }
 
   function stopBackgroundMusic() {
@@ -513,16 +396,14 @@
 
     if (customAudio && !customAudio.paused) {
       fadeOutCustomAudio(() => {
-        customAudio.pause();
+        if (customAudio) customAudio.pause();
       });
     }
-
-    stopSynthMusic();
-    isUsingCustomAudio = false;
   }
 
   function toggleMusic() {
-    if (state.musicPlaying) {
+    const isPlaying = customAudio && !customAudio.paused;
+    if (isPlaying) {
       // User explicitly shuts off music
       state.userMuted = true;
       stopBackgroundMusic();
@@ -547,39 +428,46 @@
   // Autoplay Initialization: Starts by default and unlocks seamlessly on first user interaction
   function initAudioAutoplay() {
     initAudio();
+    updateAudioUI(false);
     startBackgroundMusic();
 
-    const unlockOnGesture = () => {
-      if (state.userMuted) return;
-      if (!audioCtx) initAudio();
+    let gestureCleanedUp = false;
+    const gestures = ['pointerdown', 'touchstart', 'click', 'keydown'];
+
+    const cleanupGestureListeners = () => {
+      if (gestureCleanedUp) return;
+      gestureCleanedUp = true;
+      gestures.forEach(evt => window.removeEventListener(evt, handleFirstGesture, true));
+    };
+
+    const handleFirstGesture = (e) => {
+      // If user clicked the audio toggle or track badge, its own click handler will manage it
+      if (e && e.target && (e.target.closest('#audioToggle') || e.target.closest('#audioTrackBadge'))) {
+        cleanupGestureListeners();
+        return;
+      }
+
       if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume().catch(() => {});
       }
-      // If we have custom songs and custom audio is not actively playing, trigger playback on gesture
-      if (AUDIO_PLAYLIST && AUDIO_PLAYLIST.length > 0) {
-        if (!customAudio || customAudio.paused) {
-          stopSynthMusic();
-          playTrack(currentTrackIndex);
-          return;
-        }
-      }
-      if (!state.musicPlaying || !synthMusicInterval) {
+
+      if (!state.userMuted && (!customAudio || customAudio.paused)) {
         startBackgroundMusic();
       }
-    };
 
-    const gestures = ['pointerdown', 'touchstart', 'click', 'keydown'];
-    const handleFirstGesture = () => {
-      unlockOnGesture();
-      gestures.forEach(evt => window.removeEventListener(evt, handleFirstGesture, true));
+      cleanupGestureListeners();
     };
 
     gestures.forEach(evt => {
       window.addEventListener(evt, handleFirstGesture, { capture: true, passive: true });
     });
+
+    if (customAudio) {
+      customAudio.addEventListener('playing', cleanupGestureListeners, { once: true });
+    }
   }
 
-  // Activate default music immediately
+  // Activate audio engine immediately on script load
   initAudioAutoplay();
 
   // =========================================================================
