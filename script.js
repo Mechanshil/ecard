@@ -73,28 +73,16 @@
   const ambientCanvas = document.getElementById('ambientCanvas');
 
   // =========================================================================
-  // 2. AUDIO PLAYLIST & ENGINE (Curated Background Songs + SFX Engine)
+  // 2. AUDIO PLAYLIST & ENGINE (Curated Background Music + SFX Engine)
   // =========================================================================
-  // The background music is strictly limited to the two curated songs:
-  // - Track 1: Suzume (RADWIMPS ft. Toaka) -> 73.5s (The soaring orchestral chorus hook)
-  // - Track 2: Kalengkhi Yamakrou (Maring Song) -> 30.0s (Beat drop & rhythm entrance)
   const AUDIO_PLAYLIST = [
     {
-      id: 'suzume',
-      title: 'すずめ (Suzume) - RADWIMPS ft. 十明',
-      shortTitle: 'すずめ (Suzume)',
-      src: 'assets/suzume.mp3',
-      fallbackSrc: 'assets/RADWIMPS - すずめ feat.十明 [Official Lyric Video] - RADWIMPS.mp3',
-      startTime: 73.5, // 01:13.5 (The iconic soaring chorus: "Nande naiteru no to kikare...")
-      targetVolume: 0.42
-    },
-    {
-      id: 'maring',
-      title: 'Kalengkhi Yamakrou - Rang-In-Thang',
-      shortTitle: 'Kalengkhi Yamakrou',
-      src: 'assets/kalengkhi-yamakrou.mp3',
-      fallbackSrc: 'assets/YTDown_YouTube_Maring-Song-Kalengkhi-Yamakrou_Media_d8Wnm1OmMjQ_006_128k.mp3',
-      startTime: 30.0, // 00:30.0 (Beat drops into rhythm & main vocal verse; chorus at 136.0s)
+      id: 'wedding-melody',
+      title: 'Wedding Melody',
+      shortTitle: 'Wedding Melody',
+      src: 'assets/Video-41638.mp3',
+      fallbackSrc: 'assets/Video-41638.mp3',
+      startTime: 0,
       targetVolume: 0.50
     }
   ];
@@ -149,6 +137,7 @@
     if (customAudio) return;
     try {
       customAudio = new Audio();
+      customAudio.loop = true;
       customAudio.preload = 'auto';
 
       const handleReadyToSeek = () => {
@@ -163,9 +152,12 @@
         updateAudioUI(true);
       });
 
-      // Playback ended: switch to the other song in the playlist and seamlessly continue
+      // Playback ended: seamlessly loop or replay
       customAudio.addEventListener('ended', () => {
         const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
+        if (customAudio) {
+          customAudio.currentTime = 0;
+        }
         playTrack(nextIndex);
       });
 
@@ -334,6 +326,8 @@
       customAudio.src = targetSrc;
       customAudio.preload = 'auto';
       customAudio.load();
+    } else {
+      customAudio.currentTime = track.startTime || 0;
     }
 
     customAudio.volume = 0;
@@ -421,6 +415,9 @@
     audioTrackBadge.addEventListener('click', (e) => {
       e.stopPropagation();
       const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
+      if (customAudio) {
+        customAudio.currentTime = 0;
+      }
       playTrack(nextIndex);
     });
   }
