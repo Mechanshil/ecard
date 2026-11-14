@@ -83,6 +83,13 @@
       <div class="shadows-stage-inner">
         <div class="shadows-interactive-frame" id="shadowsFrame">
 
+          <!-- Friendly Advice Banner Instructing Users to Tap Shadows -->
+          <div class="shadows-tap-advice" id="shadowsTapAdvice" aria-live="polite">
+            <span class="advice-sparkle" aria-hidden="true">✨</span>
+            <span class="advice-text">Tap the shadows to reveal the groom &amp; bride</span>
+            <span class="advice-sparkle" aria-hidden="true">✨</span>
+          </div>
+
           <!-- Revealed Names Banner (Displays Character Names Upon Reveal & 'Groom weds Bride' When Both Revealed) -->
           <div class="revealed-names-banner" id="revealedNamesBanner" aria-live="polite">
             <span class="revealed-name-item revealed-name-groom" id="revealedNameGroom">Khulpu Merung</span>
@@ -107,9 +114,17 @@
             <img src="assets/bride_revealed.png?v=6" alt="Revealed Bride" class="revealed-full-img">
           </div>
 
-          <!-- Invisible Interactive Zones -->
-          <div class="shadow-touch-zone touch-groom" id="groomCardBox" aria-hidden="true"></div>
-          <div class="shadow-touch-zone touch-bride" id="brideCardBox" aria-hidden="true"></div>
+          <!-- Invisible Interactive Touch Zones -->
+          <button type="button" class="shadow-touch-zone touch-groom" id="groomCardBox" aria-label="Tap groom shadow to reveal" tabindex="0"></button>
+          <button type="button" class="shadow-touch-zone touch-bride" id="brideCardBox" aria-label="Tap bride shadow to reveal" tabindex="0"></button>
+
+          <!-- Small Next Arrow Button on Bottom Right Corner -->
+          <button id="btnNextStage" class="btn-next-arrow" type="button" aria-label="Continue to Wedding Timeline" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="arrow-svg" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
         </div>
       </div>
     </section>
@@ -303,7 +318,7 @@
             <div class="env-flap" id="envFlap"></div>
 
             <!-- Wax Seal With Interlocking Rings -->
-            <div class="wax-seal" id="waxSeal" aria-label="Wedding invitation wax seal">
+            <div class="wax-seal" id="waxSeal" role="button" tabindex="0" aria-label="Tap wedding seal to open invitation">
               <div class="seal-inner">
                 <div class="seal-rings" aria-hidden="true">
                   <svg class="seal-rings-svg" viewBox="0 0 44 28" width="34" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">

@@ -22,6 +22,7 @@
     cardElevated: false,
     musicPlaying: false,
     userMuted: false,
+    audioInitialized: false,
     tilt: { x: 0, y: 0, targetX: 0, targetY: 0 },
     dragStartY: 0,
     currentDragY: 0,
@@ -71,11 +72,81 @@
   const ambientCanvas = document.getElementById('ambientCanvas');
 
   // =========================================================================
-  // 2. BACKGROUND MUSIC ENGINE (Plays when hanger is pulled down)
+  // 2. BACKGROUND MUSIC ENGINE & INTERACTIVE SFX ENGINE
   // =========================================================================
   const AUDIO_SRC = 'assets/Video-41638.mp3';
+  const ENABLE_TOUCH_SFX = true; // Interactive UI sound effects on taps & transitions
+  let audioCtx = null;
   let customAudio = null;
   let customAudioFadeInterval = null;
+
+  // Web Audio Context for Interactive UI Sound Effects (Harp chime, wax pop, spring pluck, notes)
+  function initAudio() {
+    if (state.audioInitialized && audioCtx) return;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioCtx = new AudioContextClass();
+      state.audioInitialized = true;
+    } catch (e) {
+      console.warn('AudioContext not supported or restricted', e);
+    }
+  }
+
+  // Play royal harp / sparkle chime glissando when curtain opens / card elevated
+  function playHarpChime() {
+    if (!ENABLE_TOUCH_SFX) return;
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00]; // C5 to C7
+    const now = audioCtx.currentTime;
+
+    notes.forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const noteGain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+      noteGain.gain.setValueAtTime(0.001, now + idx * 0.08);
+      noteGain.gain.exponentialRampToValueAtTime(0.22, now + idx * 0.08 + 0.04);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.9);
+
+      osc.connect(noteGain);
+      noteGain.connect(audioCtx.destination);
+
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 1.0);
+    });
+  }
+
+  // Play soft wax seal unsealing pop
+  function playWaxPop() {
+    if (!ENABLE_TOUCH_SFX) return;
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.12);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.16);
+    } catch (_) {}
+  }
 
   function initCustomAudioPlayer() {
     if (customAudio) return;
@@ -257,9 +328,34 @@
     return Math.max(180, Math.round(targetY - initialMedallionCenterY));
   }
 
+  // Soft acoustic spring release/recoil pluck
+  function playSpringSound(pitch = 280) {
+    if (!ENABLE_TOUCH_SFX) return;
+    if (!audioCtx) initAudio();
+    if (!audioCtx || audioCtx.state === 'suspended') return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(pitch, now);
+      osc.frequency.exponentialRampToValueAtTime(pitch * 0.45, now + 0.22);
+
+      gain.gain.setValueAtTime(0.10, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (_) {}
+  }
+
   let archAnimStart = null;
   let archInitialProgress = 0;
-  const ARCH_DURATION = 4200; // ms: slow, majestic curtain opening matched to background music
+  const ARCH_DURATION = 2600; // ms: continuous, regal wedding cadence
 
   function animateArchReveal(timestamp) {
     if (!archAnimStart) archAnimStart = timestamp;
@@ -280,8 +376,7 @@
       curtainOverlay.classList.add('curtain-opened');
       curtainOverlay.style.pointerEvents = 'none';
 
-      // Automatically launch the rest of the cinematic story
-      startAutomatedStorySequence();
+      playHarpChime();
     }
   }
 
@@ -293,6 +388,8 @@
       cancelAnimationFrame(springAnimId);
       springAnimId = null;
     }
+
+    initAudio();
 
     // Start background music as the curtain begins opening
     startBackgroundMusic();
@@ -456,7 +553,8 @@
       // User pulled down the hanger: open curtain and begin the music!
       openCurtain(currentArchProgress);
     } else if (currentDampedY > 10 || currentArchProgress > 0.04) {
-      // Distance not reached: gently recoil back to rest
+      // Distance not reached: gently recoil back to rest with spring sound
+      playSpringSound(260);
       springBackToRest(currentDampedY, currentArchProgress);
     } else {
       springBackToRest(0, 0);
@@ -526,23 +624,31 @@
   });
 
   // =========================================================================
-  // 3B. AUTOMATED CINEMATIC STORY PROGRESSION ENGINE
+  // 3B. AUDIO NOTE SYNTHESIZER FOR TIMELINE & REVEALS
   // =========================================================================
-  function startAutomatedStorySequence() {
-    // Step 1: Reveal Groom automatically with golden sparkles
-    setTimeout(() => {
-      revealGroom();
-    }, 1000);
+  function playNote(freq, dur = 0.22) {
+    if (!ENABLE_TOUCH_SFX) return;
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      const osc = audioCtx.createOscillator();
+      const noteGain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
 
-    // Step 2: Reveal Bride automatically with golden sparkles & trigger celebratory rose petals
-    setTimeout(() => {
-      revealBride();
-    }, 2400);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
 
-    // Step 3: Automatically advance to Ceremonial Timeline stage
-    setTimeout(() => {
-      showTimelineStage();
-    }, 6200);
+      noteGain.gain.setValueAtTime(0.001, now);
+      noteGain.gain.exponentialRampToValueAtTime(0.2, now + 0.03);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      osc.connect(noteGain);
+      noteGain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + dur);
+    } catch (_) {}
   }
 
   // =========================================================================
@@ -564,6 +670,12 @@
         revealGroom();
       };
       groomCardBox.addEventListener('click', handleGroom);
+      groomCardBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleGroom(e);
+        }
+      });
     }
 
     if (brideCardBox && brideCardBox.dataset.bound !== 'true') {
@@ -573,6 +685,21 @@
         revealBride();
       };
       brideCardBox.addEventListener('click', handleBride);
+      brideCardBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleBride(e);
+        }
+      });
+    }
+
+    // Small Next Arrow Button on bottom right corner advances to Timeline
+    if (btnNextStage && btnNextStage.dataset.bound !== 'true') {
+      btnNextStage.dataset.bound = 'true';
+      btnNextStage.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showTimelineStage();
+      });
     }
   }
 
@@ -609,6 +736,7 @@
       spawnSparkleBurst(posX, posY, 26);
     }
 
+    playNote(587.33, 0.24);
     updateRevealStatus();
   }
 
@@ -639,6 +767,7 @@
       spawnSparkleBurst(posX, posY, 26);
     }
 
+    playNote(659.25, 0.24);
     updateRevealStatus();
   }
 
@@ -673,11 +802,23 @@
         spawnSparkleBurst(frameRect.left + frameRect.width * 0.5, frameRect.top + frameRect.height * 0.55, 36);
       }
 
+      playHarpChime();
+
       // Shower bouquet / rose petals when both the groom and bride are fully disclosed
       triggerPetalShower(85);
+
+      // Display small next arrow button on the bottom right corner (manual advance)
+      if (btnNextStage) {
+        btnNextStage.style.display = 'flex';
+        requestAnimationFrame(() => btnNextStage.classList.add('visible'));
+      }
     } else {
       if (shadowsFrame) {
         shadowsFrame.classList.remove('both-revealed');
+      }
+      if (btnNextStage) {
+        btnNextStage.classList.remove('visible');
+        btnNextStage.style.display = 'none';
       }
     }
   }
@@ -717,17 +858,14 @@
         const icon = item.querySelector('.timeline-item-icon') || item;
         const iconRect = icon.getBoundingClientRect();
         spawnSparkleBurst(iconRect.left + iconRect.width / 2, iconRect.top + iconRect.height / 2, 14);
+        playNote(523.25 + index * 98, 0.22);
       }, initialDelay + index * delayStep);
     });
 
     const totalTime = initialDelay + items.length * delayStep + 350;
     setTimeout(() => {
       if (timelineActionArea) timelineActionArea.classList.add('revealed');
-
-      // Automatically advance to Real Invitation envelope stage after 4.5 seconds
-      setTimeout(() => {
-        showRealInvitation();
-      }, 4500);
+      playHarpChime();
     }, totalTime);
   }
 
@@ -747,11 +885,7 @@
       requestAnimationFrame(() => {
         invitationStage.classList.add('stage-active');
         invitationStage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // Automatically open the envelope after 1.0 second
-        setTimeout(() => {
-          openEnvelope();
-        }, 1000);
+        // The user manually taps the wax seal / envelope to open the invitation card
       });
     }, 500);
   }
@@ -761,9 +895,9 @@
   }
 
   // =========================================================================
-  // 4. WAX SEAL & ENVELOPE OPENING MECHANICS (AUTOMATED CINEMATIC PROGRESSION)
-  // Step 1: Smoothly opens lid (0.85s) & pops card up partially
-  // Step 2: Automatically elevates card into full screen
+  // 4. WAX SEAL & ENVELOPE OPENING MECHANICS (2-STEP USER INTERACTION)
+  // Step 1: Click Wax Seal / Envelope -> Smoothly opens lid (0.85s) & pops card up partially
+  // Step 2: Click Partially Popped Card -> Elevates card into full screen
   // =========================================================================
   state.isOpeningEnvelope = false;
 
@@ -771,6 +905,13 @@
     if (state.envelopeOpened || state.isOpeningEnvelope) return;
     state.envelopeOpened = true;
     state.isOpeningEnvelope = true;
+
+    try {
+      initAudio();
+      playWaxPop();
+    } catch(err) {
+      console.warn('audio error:', err);
+    }
 
     try {
       // Visual burst at wax seal location
@@ -786,18 +927,23 @@
     // Step 2: Card glides up gracefully once flap has cleared the pocket opening
     setTimeout(() => {
       weddingCard.classList.add('peeking');
+      try { playNote(659.25, 0.28); } catch(e) {}
 
-      // Step 3: Automatically elevate card into full view after 1.5 seconds
+      // Allow card click elevation once peeking motion settles
       setTimeout(() => {
         state.isOpeningEnvelope = false;
-        elevateCard();
-      }, 1500);
+      }, 500);
     }, 700);
   }
 
   function elevateCard() {
-    if (!state.envelopeOpened || state.cardElevated) return;
+    if (!state.envelopeOpened || state.cardElevated || state.isOpeningEnvelope) return;
     state.cardElevated = true;
+
+    try {
+      initAudio();
+      playHarpChime();
+    } catch(e) {}
 
     try {
       const cardRect = weddingCard.getBoundingClientRect();
