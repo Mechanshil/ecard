@@ -22,7 +22,6 @@
     cardElevated: false,
     musicPlaying: false,
     userMuted: false,
-    audioInitialized: false,
     tilt: { x: 0, y: 0, targetX: 0, targetY: 0 },
     dragStartY: 0,
     currentDragY: 0,
@@ -72,81 +71,11 @@
   const ambientCanvas = document.getElementById('ambientCanvas');
 
   // =========================================================================
-  // 2. BACKGROUND MUSIC ENGINE & INTERACTIVE SFX ENGINE
+  // 2. CUSTOM BACKGROUND MUSIC ENGINE (Plays assets/Video-41638.mp3 on curtain pull)
   // =========================================================================
   const AUDIO_SRC = 'assets/Video-41638.mp3';
-  const ENABLE_TOUCH_SFX = true; // Interactive UI sound effects on taps & transitions
-  let audioCtx = null;
   let customAudio = null;
   let customAudioFadeInterval = null;
-
-  // Web Audio Context for Interactive UI Sound Effects (Harp chime, wax pop, spring pluck, notes)
-  function initAudio() {
-    if (state.audioInitialized && audioCtx) return;
-    try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-      audioCtx = new AudioContextClass();
-      state.audioInitialized = true;
-    } catch (e) {
-      console.warn('AudioContext not supported or restricted', e);
-    }
-  }
-
-  // Play royal harp / sparkle chime glissando when curtain opens / card elevated
-  function playHarpChime() {
-    if (!ENABLE_TOUCH_SFX) return;
-    if (!audioCtx) initAudio();
-    if (!audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-
-    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00]; // C5 to C7
-    const now = audioCtx.currentTime;
-
-    notes.forEach((freq, idx) => {
-      const osc = audioCtx.createOscillator();
-      const noteGain = audioCtx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-
-      noteGain.gain.setValueAtTime(0.001, now + idx * 0.08);
-      noteGain.gain.exponentialRampToValueAtTime(0.22, now + idx * 0.08 + 0.04);
-      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.9);
-
-      osc.connect(noteGain);
-      noteGain.connect(audioCtx.destination);
-
-      osc.start(now + idx * 0.08);
-      osc.stop(now + idx * 0.08 + 1.0);
-    });
-  }
-
-  // Play soft wax seal unsealing pop
-  function playWaxPop() {
-    if (!ENABLE_TOUCH_SFX) return;
-    if (!audioCtx) initAudio();
-    if (!audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-    try {
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(260, now);
-      osc.frequency.exponentialRampToValueAtTime(70, now + 0.12);
-
-      gain.gain.setValueAtTime(0.25, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.16);
-    } catch (_) {}
-  }
 
   function initCustomAudioPlayer() {
     if (customAudio) return;
@@ -328,31 +257,6 @@
     return Math.max(180, Math.round(targetY - initialMedallionCenterY));
   }
 
-  // Soft acoustic spring release/recoil pluck
-  function playSpringSound(pitch = 280) {
-    if (!ENABLE_TOUCH_SFX) return;
-    if (!audioCtx) initAudio();
-    if (!audioCtx || audioCtx.state === 'suspended') return;
-    try {
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(pitch, now);
-      osc.frequency.exponentialRampToValueAtTime(pitch * 0.45, now + 0.22);
-
-      gain.gain.setValueAtTime(0.10, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.25);
-    } catch (_) {}
-  }
-
   let archAnimStart = null;
   let archInitialProgress = 0;
   const ARCH_DURATION = 2600; // ms: continuous, regal wedding cadence
@@ -375,8 +279,6 @@
       curtainOverlay.classList.remove('drawing');
       curtainOverlay.classList.add('curtain-opened');
       curtainOverlay.style.pointerEvents = 'none';
-
-      playHarpChime();
     }
   }
 
@@ -388,8 +290,6 @@
       cancelAnimationFrame(springAnimId);
       springAnimId = null;
     }
-
-    initAudio();
 
     // Start background music as the curtain begins opening
     startBackgroundMusic();
@@ -553,8 +453,7 @@
       // User pulled down the hanger: open curtain and begin the music!
       openCurtain(currentArchProgress);
     } else if (currentDampedY > 10 || currentArchProgress > 0.04) {
-      // Distance not reached: gently recoil back to rest with spring sound
-      playSpringSound(260);
+      // Distance not reached: gently recoil back to rest
       springBackToRest(currentDampedY, currentArchProgress);
     } else {
       springBackToRest(0, 0);
@@ -624,35 +523,7 @@
   });
 
   // =========================================================================
-  // 3B. AUDIO NOTE SYNTHESIZER FOR TIMELINE & REVEALS
-  // =========================================================================
-  function playNote(freq, dur = 0.22) {
-    if (!ENABLE_TOUCH_SFX) return;
-    if (!audioCtx) initAudio();
-    if (!audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-      const osc = audioCtx.createOscillator();
-      const noteGain = audioCtx.createGain();
-      const now = audioCtx.currentTime;
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-
-      noteGain.gain.setValueAtTime(0.001, now);
-      noteGain.gain.exponentialRampToValueAtTime(0.2, now + 0.03);
-      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-      osc.connect(noteGain);
-      noteGain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + dur);
-    } catch (_) {}
-  }
-
-  // =========================================================================
-  // 3C. STAGE 2: TWO SHADOWS HOLDING HANDS (INDIVIDUAL REVEAL ENGINE)
+  // 3B. STAGE 2: TWO SHADOWS HOLDING HANDS (INDIVIDUAL REVEAL ENGINE)
   // =========================================================================
   function showScratchStage() {
     scratchStage.style.display = 'flex';
@@ -736,7 +607,6 @@
       spawnSparkleBurst(posX, posY, 26);
     }
 
-    playNote(587.33, 0.24);
     updateRevealStatus();
   }
 
@@ -767,7 +637,6 @@
       spawnSparkleBurst(posX, posY, 26);
     }
 
-    playNote(659.25, 0.24);
     updateRevealStatus();
   }
 
@@ -802,8 +671,6 @@
         spawnSparkleBurst(frameRect.left + frameRect.width * 0.5, frameRect.top + frameRect.height * 0.55, 36);
       }
 
-      playHarpChime();
-
       // Shower bouquet / rose petals when both the groom and bride are fully disclosed
       triggerPetalShower(85);
 
@@ -824,7 +691,7 @@
   }
 
   // =========================================================================
-  // 3D. STAGE 3: CEREMONIAL TIMELINE & IMPORTANT DATES ENGINE
+  // 3C. STAGE 3: CEREMONIAL TIMELINE & IMPORTANT DATES ENGINE
   // =========================================================================
   function showTimelineStage() {
     if (state.timelineShown) return;
@@ -858,14 +725,12 @@
         const icon = item.querySelector('.timeline-item-icon') || item;
         const iconRect = icon.getBoundingClientRect();
         spawnSparkleBurst(iconRect.left + iconRect.width / 2, iconRect.top + iconRect.height / 2, 14);
-        playNote(523.25 + index * 98, 0.22);
       }, initialDelay + index * delayStep);
     });
 
     const totalTime = initialDelay + items.length * delayStep + 350;
     setTimeout(() => {
       if (timelineActionArea) timelineActionArea.classList.add('revealed');
-      playHarpChime();
     }, totalTime);
   }
 
@@ -907,13 +772,6 @@
     state.isOpeningEnvelope = true;
 
     try {
-      initAudio();
-      playWaxPop();
-    } catch(err) {
-      console.warn('audio error:', err);
-    }
-
-    try {
       // Visual burst at wax seal location
       const sealRect = waxSeal.getBoundingClientRect();
       spawnSparkleBurst(sealRect.left + sealRect.width / 2, sealRect.top + sealRect.height / 2, 22);
@@ -927,7 +785,6 @@
     // Step 2: Card glides up gracefully once flap has cleared the pocket opening
     setTimeout(() => {
       weddingCard.classList.add('peeking');
-      try { playNote(659.25, 0.28); } catch(e) {}
 
       // Allow card click elevation once peeking motion settles
       setTimeout(() => {
@@ -939,11 +796,6 @@
   function elevateCard() {
     if (!state.envelopeOpened || state.cardElevated || state.isOpeningEnvelope) return;
     state.cardElevated = true;
-
-    try {
-      initAudio();
-      playHarpChime();
-    } catch(e) {}
 
     try {
       const cardRect = weddingCard.getBoundingClientRect();
