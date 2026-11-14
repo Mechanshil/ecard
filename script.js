@@ -68,55 +68,14 @@
   const weddingCard = document.getElementById('weddingCard');
   const cardShimmer = document.getElementById('cardShimmer');
 
-  const audioToggle = document.getElementById('audioToggle');
   const ambientCanvas = document.getElementById('ambientCanvas');
 
   // =========================================================================
-  // 2. AUDIO PLAYLIST & ENGINE (Curated Background Music)
+  // 2. BACKGROUND MUSIC ENGINE (Plays when hanger is pulled down)
   // =========================================================================
-  const AUDIO_PLAYLIST = [
-    {
-      id: 'wedding-melody',
-      title: 'Wedding Melody',
-      shortTitle: 'Wedding Melody',
-      src: 'assets/Video-41638.mp3',
-      fallbackSrc: 'assets/Video-41638.mp3',
-      startTime: 0,
-      targetVolume: 0.50
-    }
-  ];
-
-  const AUDIO_CONFIG = {
-    fadeInDuration: 1.5, // Volume fade-in duration (seconds)
-    fadeOutDuration: 0.8 // Volume fade-out duration (seconds)
-  };
-
-  // Select a random starting song from the playlist
-  let currentTrackIndex = Math.floor(Math.random() * AUDIO_PLAYLIST.length);
+  const AUDIO_SRC = 'assets/Video-41638.mp3';
   let customAudio = null;
   let customAudioFadeInterval = null;
-  let hasAppliedStartTime = false;
-
-  function seekToInterestingPart() {
-    if (hasAppliedStartTime || !customAudio) return;
-    const track = AUDIO_PLAYLIST[currentTrackIndex];
-    if (!track || typeof track.startTime !== 'number' || track.startTime <= 0) {
-      hasAppliedStartTime = true;
-      return;
-    }
-
-    try {
-      if (customAudio.readyState >= 1) { // HAVE_METADATA or higher
-        customAudio.currentTime = track.startTime;
-        hasAppliedStartTime = true;
-      } else if (customAudio.seekable && customAudio.seekable.length > 0) {
-        customAudio.currentTime = track.startTime;
-        hasAppliedStartTime = true;
-      }
-    } catch (err) {
-      // Audio stream is buffering or negotiating range; will retry on canplay/playing
-    }
-  }
 
   function initCustomAudioPlayer() {
     if (customAudio) return;
@@ -124,275 +83,60 @@
       customAudio = new Audio();
       customAudio.loop = true;
       customAudio.preload = 'auto';
-
-      const handleReadyToSeek = () => {
-        seekToInterestingPart();
-      };
-
-      customAudio.addEventListener('loadedmetadata', handleReadyToSeek);
-      customAudio.addEventListener('canplay', handleReadyToSeek);
-      customAudio.addEventListener('playing', () => {
-        seekToInterestingPart();
-        state.musicPlaying = true;
-        updateAudioUI(true);
-      });
-
-      // Playback ended: seamlessly loop or replay
-      customAudio.addEventListener('ended', () => {
-        const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
-        if (customAudio) {
-          customAudio.currentTime = 0;
-        }
-        playTrack(nextIndex);
-      });
-
-      // Graceful error fallback: retry fallback path or switch to alternate song
-      customAudio.addEventListener('error', () => {
-        const track = AUDIO_PLAYLIST[currentTrackIndex];
-        if (track && track.fallbackSrc && !customAudio.src.includes(encodeURI(track.fallbackSrc))) {
-          console.info(`[Audio] Retrying "${track.title}" with fallback path...`);
-          customAudio.src = track.fallbackSrc;
-          customAudio.load();
-          if (!state.userMuted) {
-            playTrack(currentTrackIndex);
-          }
-          return;
-        }
-        console.warn(`[Audio] Track "${track ? track.title : ''}" unavailable. Switching to alternate song.`);
-        const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
-        if (!state.userMuted) {
-          playTrack(nextIndex);
-        }
-      });
+      customAudio.src = AUDIO_SRC;
+      customAudio.load();
     } catch (e) {
       console.warn('Custom audio setup error:', e);
       customAudio = null;
     }
   }
 
-  function updateAudioUI(isPlaying) {
-    const track = AUDIO_PLAYLIST[currentTrackIndex];
-    const trackName = track ? track.shortTitle : 'Romantic Music';
-
-    if (isPlaying) {
-      audioToggle.classList.add('playing');
-      audioToggle.setAttribute('title', `Pause Music (${trackName})`);
-      audioToggle.setAttribute('aria-label', `Pause Romantic Background Music: ${trackName}`);
-    } else {
-      audioToggle.classList.remove('playing');
-      audioToggle.setAttribute('title', `Play Music (${trackName})`);
-      audioToggle.setAttribute('aria-label', `Play Romantic Background Music: ${trackName}`);
-    }
-
-    // Update track badge if present in DOM
-    const trackBadge = document.getElementById('audioTrackBadge');
-    if (trackBadge) {
-      const textElem = trackBadge.querySelector('.track-name-text') || trackBadge;
-      textElem.textContent = trackName;
-      trackBadge.setAttribute('title', `Now Playing: ${track ? track.title : trackName} (Click to switch song)`);
-
-      if (isPlaying) {
-        trackBadge.classList.add('visible');
-        clearTimeout(trackBadge._hideTimer);
-        trackBadge._hideTimer = setTimeout(() => {
-          trackBadge.classList.remove('visible');
-        }, 4500);
-      } else {
-        trackBadge.classList.remove('visible');
-      }
-    }
-  }
-
   function fadeInCustomAudio(targetVolume = 0.5) {
     if (!customAudio) return;
     clearInterval(customAudioFadeInterval);
-    const target = targetVolume;
-    const duration = AUDIO_CONFIG.fadeInDuration || 1.5;
-    const step = target / (duration * 20);
+    const duration = 1.5;
+    const step = targetVolume / (duration * 20);
     customAudioFadeInterval = setInterval(() => {
-      if (!customAudio || customAudio.paused || state.userMuted) {
+      if (!customAudio || customAudio.paused) {
         clearInterval(customAudioFadeInterval);
         return;
       }
-      if (customAudio.volume + step >= target) {
-        customAudio.volume = target;
+      if (customAudio.volume + step >= targetVolume) {
+        customAudio.volume = targetVolume;
         clearInterval(customAudioFadeInterval);
       } else {
-        customAudio.volume = Math.min(target, customAudio.volume + step);
+        customAudio.volume = Math.min(targetVolume, customAudio.volume + step);
       }
     }, 50);
   }
 
-  function fadeOutCustomAudio(callback) {
-    if (!customAudio) {
-      if (callback) callback();
-      return;
-    }
-    clearInterval(customAudioFadeInterval);
-    const start = customAudio.volume;
-    const step = start / 8;
-    customAudioFadeInterval = setInterval(() => {
-      if (!customAudio || customAudio.volume - step <= 0.05) {
-        if (customAudio) customAudio.volume = 0;
-        clearInterval(customAudioFadeInterval);
-        if (callback) callback();
-      } else {
-        customAudio.volume = Math.max(0, customAudio.volume - step);
-      }
-    }, 40);
-  }
-
-  function playTrack(index) {
-    if (!AUDIO_PLAYLIST || !AUDIO_PLAYLIST.length) return;
-    currentTrackIndex = (index + AUDIO_PLAYLIST.length) % AUDIO_PLAYLIST.length;
-    const track = AUDIO_PLAYLIST[currentTrackIndex];
-    hasAppliedStartTime = false;
-
-    if (!customAudio) {
-      initCustomAudioPlayer();
-    }
-    if (!customAudio) return;
-
-    const targetSrc = track.src;
-    if (!customAudio.src || !customAudio.src.includes(targetSrc)) {
-      customAudio.src = targetSrc;
-      customAudio.preload = 'auto';
-      customAudio.load();
-    } else {
-      customAudio.currentTime = track.startTime || 0;
-    }
-
-    customAudio.volume = 0;
-    state.userMuted = false;
-
-    const playPromise = customAudio.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        state.musicPlaying = true;
-        seekToInterestingPart();
-        fadeInCustomAudio(track.targetVolume || 0.5);
-        updateAudioUI(true);
-      }).catch(err => {
-        console.info('[Audio] Playback waiting for user gesture:', err.name || err);
-        state.musicPlaying = false;
-        updateAudioUI(false);
-      });
-    }
-  }
-
-  // Unified Background Music Controller
   function startBackgroundMusic() {
-    if (state.userMuted) return; // User deliberately shut it off
-
     if (!customAudio) {
       initCustomAudioPlayer();
     }
     if (!customAudio) return;
-
-    const track = AUDIO_PLAYLIST[currentTrackIndex];
-    if (!customAudio.src || !customAudio.src.includes(track.src)) {
-      playTrack(currentTrackIndex);
-      return;
-    }
 
     if (customAudio.paused) {
+      customAudio.currentTime = 0;
+      customAudio.volume = 0;
       const playPromise = customAudio.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
           state.musicPlaying = true;
-          seekToInterestingPart();
-          fadeInCustomAudio(track.targetVolume || 0.5);
-          updateAudioUI(true);
+          fadeInCustomAudio(0.50);
         }).catch(err => {
           console.info('[Audio] Playback waiting for user gesture:', err.name || err);
           state.musicPlaying = false;
-          updateAudioUI(false);
         });
       }
     } else {
       state.musicPlaying = true;
-      updateAudioUI(true);
-      fadeInCustomAudio(track.targetVolume || 0.5);
+      fadeInCustomAudio(0.50);
     }
   }
 
-  function stopBackgroundMusic() {
-    state.musicPlaying = false;
-    updateAudioUI(false);
-
-    if (customAudio && !customAudio.paused) {
-      fadeOutCustomAudio(() => {
-        if (customAudio) customAudio.pause();
-      });
-    }
-  }
-
-  function toggleMusic() {
-    const isPlaying = customAudio && !customAudio.paused;
-    if (isPlaying) {
-      // User explicitly shuts off music
-      state.userMuted = true;
-      stopBackgroundMusic();
-    } else {
-      // User turns music back on
-      state.userMuted = false;
-      startBackgroundMusic();
-    }
-  }
-
-  audioToggle.addEventListener('click', toggleMusic);
-
-  const audioTrackBadge = document.getElementById('audioTrackBadge');
-  if (audioTrackBadge) {
-    audioTrackBadge.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const nextIndex = (currentTrackIndex + 1) % AUDIO_PLAYLIST.length;
-      if (customAudio) {
-        customAudio.currentTime = 0;
-      }
-      playTrack(nextIndex);
-    });
-  }
-
-  // Autoplay Initialization: Starts by default and unlocks seamlessly on first user interaction
-  function initAudioAutoplay() {
-    updateAudioUI(false);
-    startBackgroundMusic();
-
-    let gestureCleanedUp = false;
-    const gestures = ['pointerdown', 'touchstart', 'click', 'keydown'];
-
-    const cleanupGestureListeners = () => {
-      if (gestureCleanedUp) return;
-      gestureCleanedUp = true;
-      gestures.forEach(evt => window.removeEventListener(evt, handleFirstGesture, true));
-    };
-
-    const handleFirstGesture = (e) => {
-      // If user clicked the audio toggle or track badge, its own click handler will manage it
-      if (e && e.target && (e.target.closest('#audioToggle') || e.target.closest('#audioTrackBadge'))) {
-        cleanupGestureListeners();
-        return;
-      }
-
-      if (!state.userMuted && (!customAudio || customAudio.paused)) {
-        startBackgroundMusic();
-      }
-
-      cleanupGestureListeners();
-    };
-
-    gestures.forEach(evt => {
-      window.addEventListener(evt, handleFirstGesture, { capture: true, passive: true });
-    });
-
-    if (customAudio) {
-      customAudio.addEventListener('playing', cleanupGestureListeners, { once: true });
-    }
-  }
-
-  // Activate audio engine immediately on script load
-  initAudioAutoplay();
+  // Pre-buffer audio file in background (stays paused until user pulls the hanger)
+  initCustomAudioPlayer();
 
   // =========================================================================
   // 3. CURTAIN INTERACTION ENGINE (LIFT / PULL GESTURE + TAP)
@@ -515,7 +259,7 @@
 
   let archAnimStart = null;
   let archInitialProgress = 0;
-  const ARCH_DURATION = 2100; // ms: continuous, regal wedding cadence
+  const ARCH_DURATION = 4200; // ms: slow, majestic curtain opening matched to background music
 
   function animateArchReveal(timestamp) {
     if (!archAnimStart) archAnimStart = timestamp;
@@ -534,6 +278,10 @@
       updateArchGeometry(1.0);
       curtainOverlay.classList.remove('drawing');
       curtainOverlay.classList.add('curtain-opened');
+      curtainOverlay.style.pointerEvents = 'none';
+
+      // Automatically launch the rest of the cinematic story
+      startAutomatedStorySequence();
     }
   }
 
@@ -546,10 +294,8 @@
       springAnimId = null;
     }
 
-    // Keep background music playing seamlessly if not muted by user
-    if (!state.userMuted && !state.musicPlaying) {
-      startBackgroundMusic();
-    }
+    // Start background music as the curtain begins opening
+    startBackgroundMusic();
 
     // Smoothly reveal stage directly beneath opening drapes
     showScratchStage();
@@ -704,20 +450,26 @@
 
     const threshold = getMidpointThreshold();
     const draggedDistance = state.currentDragY;
+    const openTriggerDist = Math.min(50, threshold * 0.25);
 
-    if (draggedDistance >= threshold) {
-      // Threshold distance reached (way past the midpoint): Open the curtain fully!
+    if (draggedDistance >= openTriggerDist || currentArchProgress > 0.08) {
+      // User pulled down the hanger: open curtain and begin the music!
       openCurtain(currentArchProgress);
     } else if (currentDampedY > 10 || currentArchProgress > 0.04) {
-      // Distance NOT reached (e.g. stopped before or at midpoint):
-      // Automatically close the curtain again with spring recoil without resetting hanger animation!
+      // Distance not reached: gently recoil back to rest
       springBackToRest(currentDampedY, currentArchProgress);
     } else {
-      // Dragged back to near rest, or tapped without dragging:
-      // Return to rest cleanly without artificial bounce or animation reset
       springBackToRest(0, 0);
     }
   }
+
+  // Click on hanger medallion also triggers curtain opening
+  tasselMedallion.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!state.curtainOpened) {
+      openCurtain(0.18);
+    }
+  });
 
   // Pointer event listeners on Tassel and Rope Assembly (User has to specifically tag the hanger)
   tasselMedallion.addEventListener('pointerdown', (e) => {
@@ -774,7 +526,27 @@
   });
 
   // =========================================================================
-  // 3B. STAGE 2: TWO SHADOWS HOLDING HANDS (INDIVIDUAL REVEAL ENGINE)
+  // 3B. AUTOMATED CINEMATIC STORY PROGRESSION ENGINE
+  // =========================================================================
+  function startAutomatedStorySequence() {
+    // Step 1: Reveal Groom automatically with golden sparkles
+    setTimeout(() => {
+      revealGroom();
+    }, 1000);
+
+    // Step 2: Reveal Bride automatically with golden sparkles & trigger celebratory rose petals
+    setTimeout(() => {
+      revealBride();
+    }, 2400);
+
+    // Step 3: Automatically advance to Ceremonial Timeline stage
+    setTimeout(() => {
+      showTimelineStage();
+    }, 6200);
+  }
+
+  // =========================================================================
+  // 3C. STAGE 2: TWO SHADOWS HOLDING HANDS (INDIVIDUAL REVEAL ENGINE)
   // =========================================================================
   function showScratchStage() {
     scratchStage.style.display = 'flex';
@@ -792,12 +564,6 @@
         revealGroom();
       };
       groomCardBox.addEventListener('click', handleGroom);
-      groomCardBox.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleGroom(e);
-        }
-      });
     }
 
     if (brideCardBox && brideCardBox.dataset.bound !== 'true') {
@@ -807,21 +573,6 @@
         revealBride();
       };
       brideCardBox.addEventListener('click', handleBride);
-      brideCardBox.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleBride(e);
-        }
-      });
-    }
-
-    // Small Next Arrow Button on bottom right corner advances to Timeline
-    if (btnNextStage && btnNextStage.dataset.bound !== 'true') {
-      btnNextStage.dataset.bound = 'true';
-      btnNextStage.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showTimelineStage();
-      });
     }
   }
 
@@ -924,19 +675,9 @@
 
       // Shower bouquet / rose petals when both the groom and bride are fully disclosed
       triggerPetalShower(85);
-
-      // Display small next arrow button on the bottom right corner (no auto-advance)
-      if (btnNextStage) {
-        btnNextStage.style.display = 'flex';
-        requestAnimationFrame(() => btnNextStage.classList.add('visible'));
-      }
     } else {
       if (shadowsFrame) {
         shadowsFrame.classList.remove('both-revealed');
-      }
-      if (btnNextStage) {
-        btnNextStage.classList.remove('visible');
-        btnNextStage.style.display = 'none';
       }
     }
   }
@@ -981,7 +722,12 @@
 
     const totalTime = initialDelay + items.length * delayStep + 350;
     setTimeout(() => {
-      timelineActionArea.classList.add('revealed');
+      if (timelineActionArea) timelineActionArea.classList.add('revealed');
+
+      // Automatically advance to Real Invitation envelope stage after 4.5 seconds
+      setTimeout(() => {
+        showRealInvitation();
+      }, 4500);
     }, totalTime);
   }
 
@@ -1001,17 +747,23 @@
       requestAnimationFrame(() => {
         invitationStage.classList.add('stage-active');
         invitationStage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // The user must tap the wax seal / envelope to open the invitation card
+
+        // Automatically open the envelope after 1.0 second
+        setTimeout(() => {
+          openEnvelope();
+        }, 1000);
       });
     }, 500);
   }
 
-  btnProceedToCard.addEventListener('click', showRealInvitation);
+  if (btnProceedToCard) {
+    btnProceedToCard.addEventListener('click', showRealInvitation);
+  }
 
   // =========================================================================
-  // 4. WAX SEAL & ENVELOPE OPENING MECHANICS (2-STEP INTERACTION)
-  // Step 1: Click Envelope -> Smoothly opens lid (0.85s) & pops card up partially
-  // Step 2: Click Partially Popped Card -> Elevates card into full screen
+  // 4. WAX SEAL & ENVELOPE OPENING MECHANICS (AUTOMATED CINEMATIC PROGRESSION)
+  // Step 1: Smoothly opens lid (0.85s) & pops card up partially
+  // Step 2: Automatically elevates card into full screen
   // =========================================================================
   state.isOpeningEnvelope = false;
 
@@ -1035,15 +787,16 @@
     setTimeout(() => {
       weddingCard.classList.add('peeking');
 
-      // Allow card click elevation once peeking motion settles
+      // Step 3: Automatically elevate card into full view after 1.5 seconds
       setTimeout(() => {
         state.isOpeningEnvelope = false;
-      }, 500);
+        elevateCard();
+      }, 1500);
     }, 700);
   }
 
   function elevateCard() {
-    if (!state.envelopeOpened || state.cardElevated || state.isOpeningEnvelope) return;
+    if (!state.envelopeOpened || state.cardElevated) return;
     state.cardElevated = true;
 
     try {

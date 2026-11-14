@@ -18,23 +18,6 @@
   <link rel="preload" as="image" href="assets/invitation_card.jpeg">
 </head>
 <body>
-  <!-- Ambient Audio Floating Toggle (Active / Playing by default) -->
-  <button id="audioToggle" class="floating-audio-btn playing" aria-label="Pause Romantic Background Music" title="Pause Music">
-    <span class="music-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" class="music-icon-svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 18V5l12-2v13"></path>
-        <circle cx="6" cy="18" r="3" fill="currentColor"></circle>
-        <circle cx="18" cy="16" r="3" fill="currentColor"></circle>
-        <line x1="2" y1="2" x2="22" y2="22" class="music-slash-under"></line>
-        <line x1="2" y1="2" x2="22" y2="22" class="music-slash-line"></line>
-      </svg>
-    </span>
-  </button>
-  <button id="audioTrackBadge" class="audio-track-badge" aria-label="Wedding Music" title="Background Music">
-    <span class="track-note-icon" aria-hidden="true">♪</span>
-    <span class="track-name-text">Loading...</span>
-  </button>
-
   <!-- Ambient Rose Petal and Gold Sparkles Canvas -->
   <canvas id="ambientCanvas"></canvas>
 
@@ -99,13 +82,6 @@
     <section id="scratchStage" class="stage-section shadows-stage stage-active" aria-label="Two shadows holding hands">
       <div class="shadows-stage-inner">
         <div class="shadows-interactive-frame" id="shadowsFrame">
-          
-          <!-- Friendly Advice Banner Instructing Users to Tap Shadows -->
-          <div class="shadows-tap-advice" id="shadowsTapAdvice" aria-live="polite">
-            <span class="advice-sparkle" aria-hidden="true">✨</span>
-            <span class="advice-text">Tap the shadows to reveal the groom &amp; bride</span>
-            <span class="advice-sparkle" aria-hidden="true">✨</span>
-          </div>
 
           <!-- Revealed Names Banner (Displays Character Names Upon Reveal & 'Groom weds Bride' When Both Revealed) -->
           <div class="revealed-names-banner" id="revealedNamesBanner" aria-live="polite">
@@ -131,17 +107,9 @@
             <img src="assets/bride_revealed.png?v=6" alt="Revealed Bride" class="revealed-full-img">
           </div>
 
-          <!-- Invisible Interactive Touch Zones -->
-          <button type="button" class="shadow-touch-zone touch-groom" id="groomCardBox" aria-label="Tap groom shadow to reveal" tabindex="0"></button>
-          <button type="button" class="shadow-touch-zone touch-bride" id="brideCardBox" aria-label="Tap bride shadow to reveal" tabindex="0"></button>
-
-          <!-- Small Next Arrow Button on Bottom Right Corner -->
-          <button id="btnNextStage" class="btn-next-arrow" type="button" aria-label="Continue to Wedding Timeline" style="display: none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="arrow-svg" aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </button>
+          <!-- Invisible Interactive Zones -->
+          <div class="shadow-touch-zone touch-groom" id="groomCardBox" aria-hidden="true"></div>
+          <div class="shadow-touch-zone touch-bride" id="brideCardBox" aria-hidden="true"></div>
         </div>
       </div>
     </section>
@@ -335,7 +303,7 @@
             <div class="env-flap" id="envFlap"></div>
 
             <!-- Wax Seal With Interlocking Rings -->
-            <div class="wax-seal" id="waxSeal" role="button" tabindex="0" aria-label="Tap wedding seal to open invitation">
+            <div class="wax-seal" id="waxSeal" aria-label="Wedding invitation wax seal">
               <div class="seal-inner">
                 <div class="seal-rings" aria-hidden="true">
                   <svg class="seal-rings-svg" viewBox="0 0 44 28" width="34" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
